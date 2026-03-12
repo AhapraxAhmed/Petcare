@@ -40,18 +40,16 @@ if (!empty($pets)) {
     }, $pets);
     $prompt .= "The owner has the following pets: " . implode(", ", $pet_details) . ". Tailor the tips to their pets' species and breeds.";
 
-    // DeepSeek API call
-    $apiKey = OPENROUTER_API_KEY; // Defined in config.php
-    $siteUrl = APP_URL; // Defined in config.php
-    $siteName = APP_NAME; // Defined in config.php
+    // Gemini API call
+    $apiKey = GEMINI_API_KEY; // Defined in config.php
 
-    $url = "https://openrouter.ai/api/v1/chat/completions";
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
     $data = [
-        "model" => "deepseek/deepseek-chat-v3.1:free",
-        "messages" => [
+        "contents" => [
             [
-                "role" => "user",
-                "content" => $prompt
+                "parts" => [
+                    ["text" => $prompt]
+                ]
             ]
         ]
     ];
@@ -60,9 +58,6 @@ if (!empty($pets)) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Authorization: Bearer $apiKey",
-        "HTTP-Referer: $siteUrl",
-        "X-Title: $siteName",
         "Content-Type: application/json"
     ]);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -73,12 +68,12 @@ if (!empty($pets)) {
     } else {
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($httpCode !== 200) {
-            $error = "API error: HTTP $httpCode";
+            $error = "API error: HTTP $httpCode " . $response;
         } else {
             $result = json_decode($response, true);
-            if (isset($result['choices'][0]['message']['content'])) {
+            if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
                 // Split the API response into individual tips
-                $raw_tips = $result['choices'][0]['message']['content'];
+                $raw_tips = $result['candidates'][0]['content']['parts'][0]['text'];
                 $care_tips = preg_split("/\n|\d+\.\s*/", trim($raw_tips), -1, PREG_SPLIT_NO_EMPTY);
                 // Ensure we have at least 6 tips, pad with defaults if needed
                 $default_tips = [

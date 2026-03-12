@@ -73,47 +73,38 @@ if (!empty($pets)) {
     $prompt .= "Provide a general response suitable for common pets like dogs and cats.";
 }
 
-// DeepSeek API call
-$apiKey = OPENROUTER_API_KEY;
-$siteUrl = APP_URL;
-$siteName = APP_NAME;
+// Gemini API call
+$apiKey = GEMINI_API_KEY;
+$url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" . $apiKey;
 
-$url = "https://openrouter.ai/api/v1/chat/completions";
-$messages = [
-    [
-        "role" => "system",
-        "content" => $prompt
-    ]
-];
-
+$contents = [];
 // Append previous context
 foreach ($context_history as $msg) {
     if ($msg['content'] !== $message) { // Don't duplicate the current message being appended below
-        $messages[] = [
-            "role" => $msg['role'] === 'user' ? 'user' : 'assistant',
-            "content" => $msg['content']
+        $contents[] = [
+            "role" => $msg['role'] === 'user' ? 'user' : 'model',
+            "parts" => [["text" => $msg['content']]]
         ];
     }
 }
 
 // Append current message
-$messages[] = [
+$contents[] = [
     "role" => "user",
-    "content" => $message
+    "parts" => [["text" => $message]]
 ];
 
 $data = [
-    "model" => "deepseek/deepseek-chat-v3.1:free",
-    "messages" => $messages
+    "systemInstruction" => [
+        "parts" => [["text" => $prompt]]
+    ],
+    "contents" => $contents
 ];
 
 $ch = curl_init($url);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [
-    "Authorization: Bearer $apiKey",
-    "HTTP-Referer: $siteUrl",
-    "X-Title: $siteName",
     "Content-Type: application/json"
 ]);
 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -129,13 +120,13 @@ $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 curl_close($ch);
 
 if ($httpCode !== 200) {
-    echo json_encode(['error' => "API error: HTTP $httpCode"]);
+    echo json_encode(['error' => "API error: HTTP $httpCode " . $response]);
     exit();
 }
 
 $result = json_decode($response, true);
-if (isset($result['choices'][0]['message']['content'])) {
-    $ai_response = trim($result['choices'][0]['message']['content']);
+if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+    $ai_response = trim($result['candidates'][0]['content']['parts'][0]['text']);
     
     // Save AI response to history
     $save_ai_msg_query = "INSERT INTO chat_history (user_id, role, content) VALUES (?, 'assistant', ?)";
