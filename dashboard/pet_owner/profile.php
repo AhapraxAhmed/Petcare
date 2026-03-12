@@ -2,24 +2,20 @@
 require_once(__DIR__ . "/../../config/config.php");
 require "../../includes/functions.php";
 
-// Check if user is logged in and is a pet owner
-$user = a(); // Assuming 'a()' is a function that returns user data
-$user_id = $user['user_id'];
-
-if (!isset($user['user_id']) || $user['role'] !== 'pet_owner') {
-    header("Location: /../../login.php");
-    exit();
+// Check if user is logged in
+if (!is_logged_in()) {
+    redirect(APP_URL . "/auth/login.php");
 }
+
+$user = getCurrentUser();
+$user_id = $_SESSION['user_id'];
 
 // Database connection
 $db = new Database();
 $conn = $db->getConnection();
 
 // Generate or validate CSRF token
-if (!isset($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-$csrf_token = $_SESSION['csrf_token'];
+$csrf_token = generateCSRFToken();
 
 // Handle profile image upload
 if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_token) {
@@ -35,8 +31,8 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
             $upload_path = __DIR__ . '/../../uploads/images/' . $file_name;
             
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
-                // Update database with new image path
-                $update_image_query = "UPDATE users SET profile_image = ? WHERE user_id = ?";
+                // Update database with new profile image
+                $update_image_query = "UPDATE users SET profile_image = ? WHERE id = ?";
                 $update_image_stmt = $conn->prepare($update_image_query);
                 $image_path = $file_name;
                 $update_image_stmt->bind_param("si", $image_path, $user_id);
@@ -72,7 +68,7 @@ if ($_POST && isset($_POST['update_profile']) && $_POST['csrf_token'] === $csrf_
     } elseif (!empty($phone) && !preg_match("/^\+?[1-9]\d{1,14}$/", $phone)) {
         $error_message = "Invalid phone number format.";
     } else {
-        $update_query = "UPDATE users SET name = ?, phone = ?, address = ?, newsletter_subscription = ? WHERE user_id = ?";
+        $update_query = "UPDATE users SET name = ?, phone = ?, address = ?, newsletter_subscription = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_query);
         $update_stmt->bind_param("sssii", $name, $phone, $address, $newsletter, $user_id);
 
@@ -94,7 +90,7 @@ if ($_POST && isset($_POST['change_password']) && $_POST['csrf_token'] === $csrf
     $confirm_password = $_POST['confirm_password'];
 
     // Get current password hash
-    $pass_query = "SELECT password_hash FROM users WHERE user_id = ?";
+    $pass_query = "SELECT password FROM users WHERE id = ?";
     $pass_stmt = $conn->prepare($pass_query);
     $pass_stmt->bind_param("i", $user_id);
     $pass_stmt->execute();
@@ -102,11 +98,11 @@ if ($_POST && isset($_POST['change_password']) && $_POST['csrf_token'] === $csrf
     $user_data = $pass_result->fetch_assoc();
     $pass_stmt->close();
 
-    if (password_verify($current_password, $user_data['password_hash'])) {
+    if (verify_password($current_password, $user_data['password'])) {
         if ($new_password === $confirm_password) {
-            if (strlen($new_password) >= 8) { // Assuming 8 as PASSWORD_MIN_LENGTH
-                $new_hash = password_hash($new_password, PASSWORD_BCRYPT, ['cost' => 12]);
-                $update_pass_query = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+            if (strlen($new_password) >= PASSWORD_MIN_LENGTH) {
+                $new_hash = hash_password($new_password);
+                $update_pass_query = "UPDATE users SET password = ? WHERE id = ?";
                 $update_pass_stmt = $conn->prepare($update_pass_query);
                 $update_pass_stmt->bind_param("si", $new_hash, $user_id);
 
@@ -128,7 +124,7 @@ if ($_POST && isset($_POST['change_password']) && $_POST['csrf_token'] === $csrf
 }
 
 // Get user information
-$user_query = "SELECT * FROM users WHERE user_id = ?";
+$user_query = "SELECT * FROM users WHERE id = ?";
 $user_stmt = $conn->prepare($user_query);
 $user_stmt->bind_param("i", $user_id);
 $user_stmt->execute();

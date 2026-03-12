@@ -95,13 +95,36 @@ function a() {
 // Check user role
 function has_role($required_role) {
     $user = getCurrentUser();
-    return $user && $user['role'] === $required_role;
+    if (!$user) return false;
+    
+    $actual_role = $user['role'];
+    
+    // Allow aliases between database roles and dashboard directory names
+    if ($required_role === 'pet_owner' && $actual_role === 'owner') return true;
+    if ($required_role === 'veterinarian' && $actual_role === 'vet') return true;
+    
+    return $actual_role === $required_role;
 }
 
 // Redirect function
 function redirect($url) {
     header("Location: " . $url);
     exit();
+}
+
+/**
+ * Get the correct dashboard path based on user role
+ */
+function get_dashboard_url($role) {
+    $mapping = [
+        'owner' => 'pet_owner',
+        'vet' => 'veterinarian',
+        'shelter' => 'shelter',
+        'admin' => 'admin'
+    ];
+    
+    $folder = $mapping[$role] ?? $role;
+    return APP_URL . '/dashboard/' . $folder . '/index.php';
 }
 
 // Format date

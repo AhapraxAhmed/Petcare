@@ -6,7 +6,7 @@ require_once '../includes/mail.php'; // include MailService
 // Redirect if already logged in
 if (is_logged_in()) {
     $user = a();
-    redirect('../dashboard/' . $user['role'] . '/index.php');
+    redirect(get_dashboard_url($user['role']));
 }
 
 $error_message = '';
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
                 // --------------------------
 
-                redirect('../dashboard/' . $user['role'] . '/index.php');
+                redirect(get_dashboard_url($user['role']));
             } else {
                 $error_message = 'Invalid email or password.';
             }
@@ -254,7 +254,14 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        window.location.href = "../dashboard/" + data.role + "/index.php";
+                        const mapping = {
+                            'owner': 'pet_owner',
+                            'vet': 'veterinarian',
+                            'shelter': 'shelter',
+                            'admin': 'admin'
+                        };
+                        const folder = mapping[data.role] || data.role;
+                        window.location.href = "../dashboard/" + folder + "/index.php";
                     } else {
                         alert("Google login failed: " + (data.message || ""));
                     }

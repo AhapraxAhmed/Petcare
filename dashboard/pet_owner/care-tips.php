@@ -2,14 +2,11 @@
 require_once(__DIR__ . "/../../config/config.php");
 require "../../includes/functions.php";
 
-// Check if user is logged in and is a pet owner
-$user = a(); // Assuming 'a()' returns user data
-$user_id = $user['user_id'] ?? null;
+require_once "../../middleware/auth.php";
+requireRole('pet_owner');
 
-if (!$user_id || $user['role'] !== 'pet_owner') {
-    header("Location: /../../login.php");
-    exit();
-}
+$user = getCurrentUser();
+$user_id = $_SESSION['user_id'];
 
 // Database connection
 $db = new Database();

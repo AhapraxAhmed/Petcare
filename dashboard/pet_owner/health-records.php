@@ -2,14 +2,13 @@
 require_once(__DIR__ . "/../../config/config.php");
 require "../../includes/functions.php";
 
-// Check if user is logged in and is a pet owner
-$user = a(); // Assuming 'a()' is a function that returns user data
-$user_id = $user['user_id'];
-
-if (!isset($user['user_id']) || $user['role'] !== 'pet_owner') {
-    header("Location: /../../login.php");
-    exit();
+// Check if user is logged in
+if (!is_logged_in()) {
+    redirect(APP_URL . "/auth/login.php");
 }
+
+$user = getCurrentUser();
+$user_id = $_SESSION['user_id'];
 
 // Database connection
 $db = new Database();
@@ -31,7 +30,7 @@ if ($selected_pet_id) {
     $records_query = "SELECT hr.*, u.name as vet_name, v.clinic_name 
                      FROM health_records hr 
                      LEFT JOIN veterinarians v ON hr.vet_id = v.vet_id 
-                     LEFT JOIN users u ON v.user_id = u.user_id 
+                     LEFT JOIN users u ON v.user_id = u.id 
                      WHERE hr.pet_id = ? 
                      ORDER BY hr.visit_date DESC";
     $records_stmt = $conn->prepare($records_query);

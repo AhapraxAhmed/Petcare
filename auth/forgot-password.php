@@ -6,7 +6,7 @@ require_once '../includes/mail.php';
 // Redirect if already logged in
 if (is_logged_in()) {
     $user = a();
-    redirect('../dashboard/' . $user['role'] . '/index.php');
+    redirect(get_dashboard_url($user['role']));
 }
 
 $error_message = '';

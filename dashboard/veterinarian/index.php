@@ -68,9 +68,9 @@ $week_appointments = $stmt->get_result()->fetch_assoc()['count'];
 
 // Total patients
 $stmt = $conn->prepare("
-    SELECT COUNT(DISTINCT p.id) as count 
+    SELECT COUNT(DISTINCT p.pet_id) as count 
     FROM appointments a 
-    JOIN pets p ON a.pet_id = p.id 
+    JOIN pets p ON a.pet_id = p.pet_id 
     WHERE a.vet_id = ?
 ");
 $stmt->bind_param("i", $vet_id);
@@ -94,7 +94,7 @@ $stmt = $conn->prepare("
            p.name as pet_name, p.species, p.breed,
            u.name as owner_name, u.phone as owner_phone
     FROM appointments a
-    JOIN pets p ON a.pet_id = p.id
+    JOIN pets p ON a.pet_id = p.pet_id
     JOIN users u ON a.owner_id = u.id
     WHERE a.vet_id = ? 
     AND DATE(a.appointment_date) = CURDATE()
@@ -106,15 +106,15 @@ $todays_schedule = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Recent patients
 $stmt = $conn->prepare("
-    SELECT DISTINCT p.id as pet_id, p.name as pet_name, p.species, p.breed, p.age,
+    SELECT DISTINCT p.pet_id, p.name as pet_name, p.species, p.breed, p.age,
            u.name as owner_name, u.phone as owner_phone,
            MAX(a.appointment_date) as last_visit
     FROM appointments a
-    JOIN pets p ON a.pet_id = p.id
+    JOIN pets p ON a.pet_id = p.pet_id
     JOIN users u ON a.owner_id = u.id
     WHERE a.vet_id = ?
     AND a.status = 'completed'
-    GROUP BY p.id
+    GROUP BY p.pet_id
     ORDER BY last_visit DESC
     LIMIT 5
 ");
@@ -128,7 +128,7 @@ $stmt = $conn->prepare("
            p.name as pet_name, p.species,
            u.name as owner_name
     FROM appointments a
-    JOIN pets p ON a.pet_id = p.id
+    JOIN pets p ON a.pet_id = p.pet_id
     JOIN users u ON a.owner_id = u.id
     WHERE a.vet_id = ? 
     AND a.appointment_date > NOW()

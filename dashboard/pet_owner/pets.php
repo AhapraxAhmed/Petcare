@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $application_text = sanitize_input($_POST['application_text']);
         
         // Check if pet belongs to user
-        $stmt = $conn->prepare("SELECT id, name FROM pets WHERE id = ? AND owner_id = ?");
+        $stmt = $conn->prepare("SELECT pet_id as id, name FROM pets WHERE pet_id = ? AND owner_id = ?");
         $stmt->bind_param("ii", $pet_id, $user_id);
         $stmt->execute();
         $pet_result = $stmt->get_result();
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pet_name = $pet_data['name'];
             // Create adoption listing
             $stmt = $conn->prepare("INSERT INTO adoption_listings (shelter_id, pet_id, name, species, breed, age, description, status) 
-                                    SELECT ?, ?, name, species, breed, age, ?, 'available' FROM pets WHERE id = ?");
+                                    SELECT ?, ?, name, species, breed, age, ?, 'available' FROM pets WHERE pet_id = ?");
             $stmt->bind_param("iisi", $shelter_id, $pet_id, $application_text, $pet_id);
             
             if ($stmt->execute()) {
@@ -98,7 +98,7 @@ $db = Database::getInstance();
 $conn = $db->getConnection();
 
 $stmt = $conn->prepare("
-    SELECT id as pet_id, name, species, breed, age, gender, weight, color, microchip_id, image as profile_image, medical_history as medical_notes, created_at
+    SELECT pet_id, name, species, breed, age, gender, weight, color, microchip_id, image as profile_image, medical_history as medical_notes, created_at
     FROM pets 
     WHERE owner_id = ? 
     ORDER BY created_at DESC

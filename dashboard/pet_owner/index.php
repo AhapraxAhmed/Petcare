@@ -35,7 +35,7 @@ $upcoming_appointments = $stmt->get_result()->fetch_assoc()['count'];
 $stmt = $conn->prepare("
     SELECT COUNT(*) as count 
     FROM health_records hr 
-    JOIN pets p ON hr.pet_id = p.id 
+    JOIN pets p ON hr.pet_id = p.pet_id 
     WHERE p.owner_id = ? 
     AND hr.date >= DATE_SUB(NOW(), INTERVAL 30 DAY)
 ");
@@ -55,7 +55,7 @@ $unread_notifications = $stmt->get_result()->fetch_assoc()['count'];
 
 // Get recent pets
 $stmt = $conn->prepare("
-    SELECT id as pet_id, name, species, breed, age, image as profile_image, created_at
+    SELECT pet_id, name, species, breed, age, image as profile_image, created_at
     FROM pets 
     WHERE owner_id = ? 
     ORDER BY created_at DESC 
@@ -71,7 +71,7 @@ $stmt = $conn->prepare("
            p.name as pet_name, p.species,
            u.name as vet_name
     FROM appointments a
-    JOIN pets p ON a.pet_id = p.id
+    JOIN pets p ON a.pet_id = p.pet_id
     JOIN users u ON a.vet_id = u.id
     WHERE a.owner_id = ? 
     AND a.appointment_date >= NOW()

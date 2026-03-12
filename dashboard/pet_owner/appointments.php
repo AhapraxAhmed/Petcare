@@ -2,14 +2,13 @@
 require_once(__DIR__ . "/../../config/config.php");
 require "../../includes/functions.php";
 
-$user = a();
-$user_id = $user['user_id'];
-
 // Check if user is logged in
-if (!isset($user['user_id'])) {
-    header("Location: /../../login.php");
-    exit();
+if (!is_logged_in()) {
+    redirect(APP_URL . "/auth/login.php");
 }
+
+$user = getCurrentUser();
+$user_id = $_SESSION['user_id'];
 
 // Database connection
 $db = new Database();
@@ -27,7 +26,7 @@ $pets_stmt->close();
 // Get available veterinarians
 $vets_query = "SELECT v.vet_id, u.name, v.specialization, v.clinic_name, v.consultation_fee 
                FROM veterinarians v 
-               JOIN users u ON v.user_id = u.user_id 
+               JOIN users u ON v.user_id = u.id 
                WHERE u.is_verified = 1";
 $vets_stmt = $conn->prepare($vets_query);
 $vets_stmt->execute();
@@ -60,7 +59,7 @@ $appointments_query = "SELECT a.*, p.name as pet_name, u.name as vet_name, v.cli
                       FROM appointments a 
                       JOIN pets p ON a.pet_id = p.pet_id 
                       JOIN veterinarians v ON a.vet_id = v.vet_id 
-                      JOIN users u ON v.user_id = u.user_id 
+                      JOIN users u ON v.user_id = u.id 
                       WHERE a.owner_id = ? 
                       ORDER BY a.appointment_date DESC";
 $appointments_stmt = $conn->prepare($appointments_query);

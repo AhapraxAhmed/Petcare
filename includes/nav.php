@@ -6,11 +6,11 @@ require_once __DIR__ . '/../includes/functions.php';
 $isLoggedIn = is_logged_in();
 $user       = $isLoggedIn ? a() : null;
 
-$username   = $isLoggedIn ? $user['name'] : "SomeOne";
-$role       = $isLoggedIn ? $user['role'] : "For Something";
+$username   = $isLoggedIn ? $user['name'] : "Guest";
+$role       = $isLoggedIn ? $user['role'] : "";
 
-$dashboardLink = "../dashboard/" . ($isLoggedIn ? $role : "") . "/index.php";
-$logoutLink    = "../auth/logout.php";
+$dashboardLink = $isLoggedIn ? get_dashboard_url($role) : "#";
+$logoutLink    = APP_URL . "/auth/logout.php";
 ?>
 
 <style>
@@ -23,11 +23,11 @@ $logoutLink    = "../auth/logout.php";
 
             <!-- Left side -->
             <div class="hidden md:flex items-center space-x-8">
-                <a href="../index.php#home" class="text-gray-700 text-lg font-medium hover:text-gray-600 relative group">
+                <a href="<?= APP_URL ?>/index.php#home" class="text-gray-700 text-lg font-medium hover:text-gray-600 relative group">
                     Home
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-600 transition-all group-hover:w-full"></span>
                 </a>
-                <a href="products.php" class="text-gray-700 text-lg font-medium hover:text-gray-600 relative group">
+                <a href="<?= APP_URL ?>/pages/products.php" class="text-gray-700 text-lg font-medium hover:text-gray-600 relative group">
                     Products
                     <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-gray-600 transition-all group-hover:w-full"></span>
                 </a>
@@ -36,13 +36,13 @@ $logoutLink    = "../auth/logout.php";
             <!-- Center Logo -->
             <div class="flex items-center justify-center flex-1">
                 <div class="flex-shrink-0 flex items-center space-x-2">
-                    <img src="../logo.png" alt="" class="w-50 h-60 mt-8">
+                    <img src="<?= APP_URL ?>/logo.png" alt="" class="w-50 h-60 mt-8">
                 </div>
             </div>
 
             <!-- Right side -->
             <div class="hidden md:flex items-center space-x-6">
-                <a href="cart.php" class="text-gray-700 hover:text-blue-300 transform hover:scale-110">
+                <a href="<?= APP_URL ?>/pages/cart.php" class="text-gray-700 hover:text-blue-300 transform hover:scale-110">
                     <i class="fas fa-shopping-cart text-xl"></i>
                 </a>
 
@@ -77,10 +77,10 @@ $logoutLink    = "../auth/logout.php";
 <?php else: ?>
 
                     <!-- Login / Register -->
-                    <a href="../auth/login.php" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:scale-105">
+                    <a href="<?= APP_URL ?>/auth/login.php" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-2.5 rounded-full font-semibold text-sm shadow-lg hover:scale-105">
                         Login
                     </a>
-                    <a href="../auth/register.php" 
+                    <a href="<?= APP_URL ?>/auth/register.php" 
                        class="border-2 border-blue-500 text-blue-600 px-6 py-2.5 rounded-full font-semibold text-sm hover:bg-blue-500/20 hover:border-blue-400 hover:text-blue-400 shadow-lg">
                        Sign Up
                     </a>

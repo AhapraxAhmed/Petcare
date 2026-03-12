@@ -5,8 +5,8 @@ require_once '../includes/functions.php';
 
 // Redirect if user is already logged in
 if (is_logged_in()) {
-    $user = get_current_user();
-    redirect('../dashboard/' . $user['role'] . '/index.php');
+    $user = getCurrentUser();
+    redirect(get_dashboard_url($user['role']));
 }
 
 // Initialize variables for messages

@@ -35,7 +35,7 @@
     <button id="userMenuBtn" class="flex items-center p-2">
         <img src="<?php 
             if (empty($user['profile_image'])) {
-                echo 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s';
+                echo '/furshield/assets/images/you.jpg';
             } else {
                 echo (isset($user['google_id']) || isset($user['github_id'])) 
                     ? htmlspecialchars($user['profile_image']) 
