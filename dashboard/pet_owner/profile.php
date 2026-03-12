@@ -32,14 +32,14 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
             
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
                 // Update database with new profile image
-                $update_image_query = "UPDATE users SET profile_image = ? WHERE id = ?";
+                $update_image_query = "UPDATE users SET avatar = ? WHERE id = ?";
                 $update_image_stmt = $conn->prepare($update_image_query);
                 $image_path = $file_name;
                 $update_image_stmt->bind_param("si", $image_path, $user_id);
                 
                 if ($update_image_stmt->execute()) {
                     $image_success = "Profile image updated successfully!";
-                    $user_info['profile_image'] = $image_path; // Update local user data
+                    $user_info['avatar'] = $image_path; // Update local user data
                 } else {
                     $image_error = "Failed to update profile image in database.";
                 }
@@ -68,9 +68,9 @@ if ($_POST && isset($_POST['update_profile']) && $_POST['csrf_token'] === $csrf_
     } elseif (!empty($phone) && !preg_match("/^\+?[1-9]\d{1,14}$/", $phone)) {
         $error_message = "Invalid phone number format.";
     } else {
-        $update_query = "UPDATE users SET name = ?, phone = ?, address = ?, newsletter_subscription = ? WHERE id = ?";
+        $update_query = "UPDATE users SET name = ?, phone = ?, address = ? WHERE id = ?";
         $update_stmt = $conn->prepare($update_query);
-        $update_stmt->bind_param("sssii", $name, $phone, $address, $newsletter, $user_id);
+        $update_stmt->bind_param("sssi", $name, $phone, $address, $user_id);
 
         if ($update_stmt->execute()) {
             $success_message = "Profile updated successfully!";
@@ -235,12 +235,12 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                     <input type="hidden" name="upload_image" value="1">
                                     <label class="profile-image-container">
-                                        <img src="<?php echo (!empty($user_info['profile_image']) && file_exists(__DIR__ . '/../../uploads/images/' . $user_info['profile_image'])) ? '../../uploads/images/' . htmlspecialchars($user_info['profile_image']) : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s'; ?>" alt="User" class="w-10 h-10 rounded-full mx-auto mb-3">
+                                        <img src="<?php echo (!empty($user_info['avatar']) && file_exists(__DIR__ . '/../../uploads/images/' . $user_info['avatar'])) ? '../../uploads/images/' . htmlspecialchars($user_info['avatar']) : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s'; ?>" alt="User" class="w-10 h-10 rounded-full mx-auto mb-3">
                                         <input type="file" name="profile_image" accept="image/*" onchange="document.getElementById('imageUploadForm').submit();">
                                     </label>
                                 </form>
                             <?php else: ?>
-                                <img src="<?php echo htmlspecialchars($user_info['profile_image']); ?>" alt="User" class="w-10 h-10 rounded-full mx-auto mb-3">
+                                <img src="<?php echo htmlspecialchars($user_info['avatar']); ?>" alt="User" class="w-10 h-10 rounded-full mx-auto mb-3">
                             <?php endif; ?>
                             <h5 class="font-medium"><?php echo htmlspecialchars($user_info['name']); ?></h5>
                             <p class="text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>
@@ -323,13 +323,7 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                                 <textarea name="address" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" rows="3"><?php echo htmlspecialchars($user_info['address']); ?></textarea>
                             </div>
                         </div>
-                        <div class="mt-4">
-                            <label class="inline-flex items-center">
-                                <input type="checkbox" name="newsletter" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
-                                       <?php echo $user_info['newsletter_subscription'] ? 'checked' : ''; ?>>
-                                <span class="ml-2 text-sm text-gray-700">Subscribe to newsletter and pet care tips</span>
-                            </label>
-                        </div>
+
                         <div class="mt-6">
                             <button type="submit" name="update_profile" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
                                 <i class="fas fa-save mr-2"></i> Update Profile
