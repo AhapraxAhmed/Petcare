@@ -187,6 +187,7 @@ $order = [
             }
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-x-hidden">
     <!-- Navigation -->

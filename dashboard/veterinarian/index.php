@@ -176,6 +176,7 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
             transition: all 0.2s ease;
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
     <div class="md:p-9">

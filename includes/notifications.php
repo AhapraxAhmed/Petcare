@@ -77,7 +77,8 @@ class NotificationService {
                     .header { background: #f59e0b; color: white; padding: 20px; text-align: center; }
                     .content { padding: 20px; background: #f9f9f9; }
                 </style>
-            </head>
+                <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
+</head>
             <body>
                 <div class='container'>
                     <div class='header'>
@@ -138,7 +139,8 @@ class NotificationService {
                     .header { background: #ef4444; color: white; padding: 20px; text-align: center; }
                     .content { padding: 20px; background: #f9f9f9; }
                 </style>
-            </head>
+                <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
+</head>
             <body>
                 <div class='container'>
                     <div class='header'>
@@ -200,7 +202,8 @@ class NotificationService {
                     .header { background: #8b5cf6; color: white; padding: 20px; text-align: center; }
                     .content { padding: 20px; background: #f9f9f9; }
                 </style>
-            </head>
+                <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
+</head>
             <body>
                 <div class='container'>
                     <div class='header'>
@@ -262,7 +265,8 @@ class NotificationService {
                     .header { background: #667eea; color: white; padding: 20px; text-align: center; }
                     .content { padding: 20px; background: #f9f9f9; }
                 </style>
-            </head>
+                <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
+</head>
             <body>
                 <div class='container'>
                     <div class='header'>

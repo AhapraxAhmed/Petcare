@@ -5,8 +5,8 @@ require_once(__DIR__ . "/../../config/config.php");
 require "../../includes/functions.php";
 
 // Check if user is logged in and is a pet owner
-$user = a(); // Assuming 'a()' returns user data
-if (!isset($user['user_id']) || $user['role'] !== 'pet_owner') {
+$user = getCurrentUser(); 
+if (!$user || !isset($user['id']) || $user['role'] !== 'owner') {
     echo json_encode(['error' => 'Unauthorized access']);
     exit();
 }
@@ -23,15 +23,44 @@ $message = trim($input['message']);
 $db = new Database();
 $conn = $db->getConnection();
 
+// Handle fetch_history request
+if (isset($_GET['fetch_history'])) {
+    $history_query = "SELECT role, content FROM chat_history WHERE user_id = ? ORDER BY created_at ASC";
+    $history_stmt = $conn->prepare($history_query);
+    $history_stmt->bind_param("i", $user['id']);
+    $history_stmt->execute();
+    $history_result = $history_stmt->get_result();
+    $history = $history_result->fetch_all(MYSQLI_ASSOC);
+    $history_stmt->close();
+    
+    echo json_encode(['history' => $history]);
+    exit();
+}
+
 // Fetch pet details for personalization
 $pets_query = "SELECT name, species, breed FROM pets WHERE owner_id = ?";
 $pets_stmt = $conn->prepare($pets_query);
-$pets_stmt->bind_param("i", $user['user_id']);
+$pets_stmt->bind_param("i", $user['id']);
 $pets_stmt->execute();
 $pets_result = $pets_stmt->get_result();
 $pets = $pets_result->fetch_all(MYSQLI_ASSOC);
 $pets_stmt->close();
-$conn->close();
+
+// Save user message to history
+$save_user_msg_query = "INSERT INTO chat_history (user_id, role, content) VALUES (?, 'user', ?)";
+$save_user_msg_stmt = $conn->prepare($save_user_msg_query);
+$save_user_msg_stmt->bind_param("is", $user['id'], $message);
+$save_user_msg_stmt->execute();
+$save_user_msg_stmt->close();
+
+// Fetch previous chat history for AI context (last 5 interactions to save tokens)
+$context_query = "SELECT role, content FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 10";
+$context_stmt = $conn->prepare($context_query);
+$context_stmt->bind_param("i", $user['id']);
+$context_stmt->execute();
+$context_result = $context_stmt->get_result();
+$context_history = array_reverse($context_result->fetch_all(MYSQLI_ASSOC)); // Reverse to get chronological order
+$context_stmt->close();
 
 // Construct prompt for DeepSeek API
 $prompt = "You are a pet care assistant. Provide a concise, helpful response to the following user query about pet care: '$message'. ";
@@ -50,14 +79,32 @@ $siteUrl = APP_URL;
 $siteName = APP_NAME;
 
 $url = "https://openrouter.ai/api/v1/chat/completions";
+$messages = [
+    [
+        "role" => "system",
+        "content" => $prompt
+    ]
+];
+
+// Append previous context
+foreach ($context_history as $msg) {
+    if ($msg['content'] !== $message) { // Don't duplicate the current message being appended below
+        $messages[] = [
+            "role" => $msg['role'] === 'user' ? 'user' : 'assistant',
+            "content" => $msg['content']
+        ];
+    }
+}
+
+// Append current message
+$messages[] = [
+    "role" => "user",
+    "content" => $message
+];
+
 $data = [
     "model" => "deepseek/deepseek-chat-v3.1:free",
-    "messages" => [
-        [
-            "role" => "user",
-            "content" => $prompt
-        ]
-    ]
+    "messages" => $messages
 ];
 
 $ch = curl_init($url);
@@ -88,8 +135,19 @@ if ($httpCode !== 200) {
 
 $result = json_decode($response, true);
 if (isset($result['choices'][0]['message']['content'])) {
-    echo json_encode(['response' => trim($result['choices'][0]['message']['content'])]);
+    $ai_response = trim($result['choices'][0]['message']['content']);
+    
+    // Save AI response to history
+    $save_ai_msg_query = "INSERT INTO chat_history (user_id, role, content) VALUES (?, 'assistant', ?)";
+    $save_ai_msg_stmt = $conn->prepare($save_ai_msg_query);
+    $save_ai_msg_stmt->bind_param("is", $user['id'], $ai_response);
+    $save_ai_msg_stmt->execute();
+    $save_ai_msg_stmt->close();
+    
+    echo json_encode(['response' => $ai_response]);
 } else {
     echo json_encode(['error' => 'Unexpected API response format']);
 }
+
+$conn->close();
 ?>

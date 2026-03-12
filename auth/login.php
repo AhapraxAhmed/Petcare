@@ -99,6 +99,7 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
             }
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">

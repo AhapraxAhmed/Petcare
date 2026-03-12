@@ -108,6 +108,7 @@ if (!empty($pets)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pet Care Tips - FurShield</title>
+    <link rel="icon" href="../../assets/images/favicon.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -200,7 +201,7 @@ if (!empty($pets)) {
                 <div class="chat-container">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-comment mr-2"></i>Pet Care Chat</h3>
                     <div id="chat-messages" class="h-64 overflow-y-auto bg-gray-100 p-4 rounded mb-4">
-                        <div class="text-gray-600 text-center">Start a conversation with our pet care assistant!</div>
+                        <div class="text-gray-600 text-center mb-4">Start a conversation with our pet care assistant!</div>
                     </div>
                     <div class="flex">
                         <input type="text" id="chat-input" class="flex-1 border rounded-l-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type your message..." autocomplete="off">
@@ -250,7 +251,7 @@ if (!empty($pets)) {
                     <h3 class="text-lg font-semibold text-gray-800 mb-6"><i class="fas fa-paw mr-2 text-blue-600"></i>No Pets Registered</h3>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <p class="text-gray-700">You haven't registered any pets yet. Add a pet to receive personalized care tips and manage their health records!</p>
-                        <a href="/add-pet.php" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Add a Pet</a>
+                        <a href="pets.php?action=add" class="mt-4 inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Add a Pet</a>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -314,6 +315,23 @@ if (!empty($pets)) {
                 const loadingDiv = document.getElementById('loading');
                 if (loadingDiv) loadingDiv.remove();
             }
+
+            // Fetch chat history on load
+            function loadChatHistory() {
+                fetch('chat_handler.php?fetch_history=1')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.history && data.history.length > 0) {
+                        data.history.forEach(msg => {
+                            appendMessage(msg.content, msg.role === 'user');
+                        });
+                    }
+                })
+                .catch(error => console.error('Error fetching history:', error));
+            }
+
+            // Load history immediately
+            loadChatHistory();
 
             // Handle send button click
             chatSend.addEventListener('click', sendMessage);

@@ -115,6 +115,7 @@ ob_end_flush();
     <title>Complete Your Profile - FurShield</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen">
     <div class="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">

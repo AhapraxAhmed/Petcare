@@ -90,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             50% { transform: translateY(-10px); }
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="gradient-bg min-h-screen flex items-center justify-center p-4">
     <!-- Background Elements -->

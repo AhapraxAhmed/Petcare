@@ -238,6 +238,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             50% { transform: rotate(180deg); }
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 overflow-x-hidden">
     <!-- Navigation -->

@@ -215,6 +215,7 @@ $conn->close();
             display: block;
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-100">
     <div class="md:p-9">

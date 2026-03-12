@@ -391,6 +391,7 @@ if ($brand_result) {
             transform: rotateX(2deg) rotateY(2deg) scale(1.02);
         }
     </style>
+    <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
 </head>
 <body class="bg-gray-50 overflow-x-hidden">
     <!-- Navigation -->
