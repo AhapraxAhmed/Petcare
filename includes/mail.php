@@ -49,8 +49,6 @@ class MailService {
             $this->logEmail($to_email, $subject, $message, 'failed');
             return false;
         }
-        
-        return true; // For demonstration
     }
     public function sendPasswordResetEmail($to_email, $to_name, $reset_link) {
     // Subject for the password reset email

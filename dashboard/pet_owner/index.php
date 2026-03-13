@@ -293,7 +293,7 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 <div class="flex items-center mb-3">
                                     <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-3">
                                         <?php if ($pet['profile_image']): ?>
-                                        <img src="../../uploads/<?php echo $pet['profile_image']; ?>" alt="<?php echo htmlspecialchars($pet['name']); ?>" class="w-12 h-12 rounded-full object-cover">
+                                        <img src="../../uploads/pets/<?php echo htmlspecialchars($pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($pet['name']); ?>" class="w-12 h-12 rounded-full object-cover">
                                         <?php else: ?>
                                         <i class="fas fa-paw text-gray-500"></i>
                                         <?php endif; ?>
@@ -416,7 +416,7 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 </div>
                             </a>
                             
-                            <a href="shop.php" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                            <a href="../../pages/products.php" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
                                 <div class="bg-purple-500 p-2 rounded-lg mr-4">
                                     <i class="fas fa-shopping-cart text-white"></i>
                                 </div>

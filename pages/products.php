@@ -129,7 +129,7 @@ if ($is_ajax) {
                     <div class="product-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden">
                         <!-- Product Image with Overlay -->
                         <div class="relative overflow-hidden rounded-t-2xl">
-                            <img src="../<?= htmlspecialchars($row['image_url'] ?? '/placeholder.svg?height=250&width=300') ?>" 
+                            <img src="<?= !empty($row['image_url']) ? '../' . htmlspecialchars($row['image_url']) : 'https://placehold.co/300x250/e2e8f0/475569?text=Product+Image' ?>" 
                                  alt="<?= htmlspecialchars($row['name'] ?? 'Product') ?>" 
                                  class="w-full h-56 object-cover transition-transform duration-700 group-hover:scale-110">
                             
@@ -505,7 +505,7 @@ if ($brand_result) {
                                 <div class="product-card group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden">
                                     <!-- Product Image with Overlay -->
                                     <div class="relative overflow-hidden rounded-t-2xl">
-                                        <img src="../<?= htmlspecialchars($row['image_url'] ?? '/placeholder.svg?height=250&width=300') ?>" 
+                                        <img src="<?= !empty($row['image_url']) ? '../' . htmlspecialchars($row['image_url']) : 'https://placehold.co/300x250/e2e8f0/475569?text=Product+Image' ?>" 
                                              alt="<?= htmlspecialchars($row['name'] ?? 'Product') ?>" 
                                              class="w-full h-56 object-cover transition-transform duration-700 group-hover:scale-110">
                                         

@@ -158,10 +158,10 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                                     <p><strong class="text-gray-700">Color:</strong> <?php echo htmlspecialchars($selected_pet['color']); ?></p>
                                 </div>
                             </div>
-                            <?php if ($selected_pet['medical_notes']): ?>
+                            <?php if (isset($selected_pet['medical_history']) && $selected_pet['medical_history']): ?>
                                 <div class="mt-4">
                                     <p><strong class="text-gray-700">Medical Notes:</strong></p>
-                                    <p class="text-gray-600"><?php echo htmlspecialchars($selected_pet['medical_notes']); ?></p>
+                                    <p class="text-gray-600"><?php echo htmlspecialchars($selected_pet['medical_history']); ?></p>
                                 </div>
                             <?php endif; ?>
                         </div>
