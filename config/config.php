@@ -29,7 +29,7 @@ define('CSRF_ENABLED', true);
 
 // Pagination
 define('ITEMS_PER_PAGE', 10);
-define('GEMINI_API_KEY', 'AIzaSyAgMX9rUKYmqxXml1wcqz8gJiRuuZE51Y0');
+define('GEMINI_API_KEY', 'YourGeminiKey');
 // Timezone
 date_default_timezone_set('Asia/Karachi');
 
