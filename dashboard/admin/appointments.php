@@ -12,9 +12,8 @@ $appointments = $conn->query("
     SELECT a.*, p.name as pet_name, u.name as owner_name, v.name as vet_name
     FROM appointments a
     JOIN pets p ON a.pet_id = p.pet_id
-    JOIN users u ON a.owner_id = u.user_id
-    JOIN veterinarians vet ON a.vet_id = vet.vet_id
-    JOIN users v ON vet.user_id = v.user_id
+    JOIN users u ON a.owner_id = u.id
+    JOIN users v ON a.vet_id = v.id
     ORDER BY a.appointment_date DESC
 ")->fetch_all(MYSQLI_ASSOC);
 $db->closeConnection();

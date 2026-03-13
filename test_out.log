@@ -1,8 +1,0 @@
-Page: /dashboard/pet_owner/index.php - HTTP Code: 302 - OK
-Page: /dashboard/pet_owner/pets.php - HTTP Code: 302 - OK
-Page: /dashboard/pet_owner/appointments.php - HTTP Code: 200 - OK
-Page: /dashboard/pet_owner/health-records.php - HTTP Code: 200 - OK
-Page: /dashboard/pet_owner/care-tips.php - HTTP Code: 302 - OK
-Page: /dashboard/pet_owner/chat_handler.php - HTTP Code: 200 - ERROR DETECTED
-{"error":"Unauthorized access"}
-Page: /dashboard/pet_owner/profile.php - HTTP Code: 200 - OK

@@ -40,12 +40,12 @@
     <!-- Profile Button -->
     <button id="userMenuBtn" class="flex items-center p-2">
         <img src="<?php 
-            if (empty($user['profile_image'])) {
+            if (empty($user['avatar'])) {
                 echo 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s';
             } else {
                 echo (isset($user['google_id']) || isset($user['github_id'])) 
-                    ? htmlspecialchars($user['profile_image']) 
-                    : '../../Uploads/images/' . htmlspecialchars($user['profile_image']);
+                    ? htmlspecialchars($user['avatar']) 
+                    : '../../uploads/users/' . htmlspecialchars($user['avatar']);
             }
         ?>" 
         alt="User" class="w-10 h-10 rounded-full">
@@ -54,8 +54,8 @@
     <!-- Collapsible Menu -->
     <div id="userMenu" class="hidden absolute bottom-16 left-0 w-16 p-2 bg-white shadow-lg rounded-lg z-50 flex flex-col items-center space-y-4">
         <!-- Profile -->
-        <a href="profile.php" 
-           class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+        <a href="settings.php" 
+           class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors" title="Settings">
             <i class="fas fa-user text-gray-700"></i>
         </a>
         <!-- Logout -->

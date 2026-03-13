@@ -15,12 +15,13 @@ $db = new Database();
 $conn = $db->getConnection();
 
 // Get user's pets
-$pets_query = "SELECT pet_id, name, species, breed FROM pets WHERE owner_id = ?";
+$pets_query = "SELECT pet_id, name, species, breed, image FROM pets WHERE owner_id = ?";
 $pets_stmt = $conn->prepare($pets_query);
 $pets_stmt->bind_param("i", $user_id);
 $pets_stmt->execute();
 $pets_result = $pets_stmt->get_result();
 $user_pets = $pets_result->fetch_all(MYSQLI_ASSOC);
+// error_log(print_r($user_pets, true)); // Debugging
 $pets_stmt->close();
 
 // Get selected pet's health records
@@ -133,7 +134,13 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                             <?php foreach ($user_pets as $pet): ?>
                                 <a href="?pet_id=<?php echo $pet['pet_id']; ?>" class="pet-card">
                                     <div class="border rounded-lg p-4 text-center <?php echo ($selected_pet_id == $pet['pet_id']) ? 'border-blue-500 bg-blue-50' : 'border-gray-200'; ?>">
-                                        <i class="fas fa-paw text-2xl mb-2 text-blue-600"></i>
+                                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                                            <?php if ($pet['image']): ?>
+                                                <img src="../../uploads/pets/<?php echo htmlspecialchars($pet['image']); ?>" alt="" class="w-full h-full object-cover">
+                                            <?php else: ?>
+                                                <i class="fas fa-paw text-xl text-blue-600"></i>
+                                            <?php endif; ?>
+                                        </div>
                                         <h6 class="font-medium"><?php echo htmlspecialchars($pet['name']); ?></h6>
                                         <p class="text-sm text-gray-500"><?php echo htmlspecialchars($pet['species'] . ' - ' . $pet['breed']); ?></p>
                                     </div>
@@ -145,7 +152,18 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                     <?php if ($selected_pet): ?>
                         <!-- Pet Info -->
                         <div class="bg-white rounded-xl shadow-sm p-6 mb-6 pet-card animate-fade-in" style="animation-delay: 0.1s;">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4"><i class="fas fa-paw mr-2"></i><?php echo htmlspecialchars($selected_pet['name']); ?>'s Profile</h3>
+                            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                                <?php if ($selected_pet['image']): ?>
+                                    <div class="w-32 h-32 rounded-xl overflow-hidden shadow-md flex-shrink-0">
+                                        <img src="../../uploads/pets/<?php echo htmlspecialchars($selected_pet['image']); ?>" alt="<?php echo htmlspecialchars($selected_pet['name']); ?>" class="w-full h-full object-cover">
+                                    </div>
+                                <?php else: ?>
+                                    <div class="w-32 h-32 rounded-xl bg-indigo-100 flex items-center justify-center shadow-inner flex-shrink-0">
+                                        <i class="fas fa-paw text-4xl text-indigo-400"></i>
+                                    </div>
+                                <?php endif; ?>
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-4"><?php echo htmlspecialchars($selected_pet['name']); ?>'s Profile</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <p><strong class="text-gray-700">Species:</strong> <?php echo htmlspecialchars($selected_pet['species']); ?></p>
@@ -164,6 +182,8 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                                     <p class="text-gray-600"><?php echo htmlspecialchars($selected_pet['medical_history']); ?></p>
                                 </div>
                             <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Health Records -->

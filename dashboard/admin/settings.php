@@ -2,14 +2,14 @@
 require_once '../../middleware/auth.php';
 requireRole('admin');
 
-$user = a(); // Assumes this retrieves the authenticated user's data
-$user_id = $user['user_id']; // Get the admin's user_id
+$user = a(); 
+$user_id = $user['id']; 
 
 $db = new Database();
 $conn = $db->getConnection();
 
 // Fetch current user data
-$stmt = $conn->prepare("SELECT name, phone, address, email, profile_image FROM users WHERE user_id = ?");
+$stmt = $conn->prepare("SELECT name, phone, address, email, avatar FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $current_user = $stmt->get_result()->fetch_assoc();
@@ -30,13 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message_type = "error";
     } else {
         // Create upload directory if it doesn't exist
-        $upload_dir = '../../Uploads/images/';
+        $upload_dir = '../../uploads/users/';
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0755, true);
         }
 
         // Handle profile image upload (optional)
-        $profile_image = $current_user['profile_image'];
+        $avatar = $current_user['avatar'];
         if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
             $allowed_types = ['image/jpeg', 'image/png', 'image/gif'];
             $file_type = mime_content_type($_FILES['profile_image']['tmp_name']);
@@ -46,10 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
                     // Delete old profile image if it exists
-                    if ($profile_image && file_exists($upload_dir . $profile_image)) {
-                        unlink($upload_dir . $profile_image);
+                    if ($avatar && file_exists($upload_dir . $avatar)) {
+                        unlink($upload_dir . $avatar);
                     }
-                    $profile_image = $file_name;
+                    $avatar = $file_name;
                 } else {
                     $message = "Failed to upload profile image!";
                     $message_type = "error";
@@ -62,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Update user data in the database if no errors
         if (empty($message)) {
-            $stmt = $conn->prepare("UPDATE users SET name = ?, phone = ?, address = ?, email = ?, profile_image = ? WHERE user_id = ?");
-            $stmt->bind_param("sssssi", $name, $phone, $address, $admin_email, $profile_image, $user_id);
+            $stmt = $conn->prepare("UPDATE users SET name = ?, phone = ?, address = ?, email = ?, avatar = ? WHERE id = ?");
+            $stmt->bind_param("sssssi", $name, $phone, $address, $admin_email, $avatar, $user_id);
             if ($stmt->execute()) {
                 $message = "Profile and settings updated successfully!";
                 $message_type = "success";
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current_user['phone'] = $phone;
                 $current_user['address'] = $address;
                 $current_user['email'] = $admin_email;
-                $current_user['profile_image'] = $profile_image;
+                $current_user['avatar'] = $avatar;
             } else {
                 $message = "Failed to update profile!";
                 $message_type = "error";
@@ -177,8 +177,8 @@ $db->closeConnection();
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Profile Image</label>
                             <input type="file" name="profile_image" accept="image/jpeg,image/png,image/gif" class="mt-1 p-2 w-full border rounded-md">
-                            <?php if ($current_user['profile_image']): ?>
-                                <p class="text-sm text-gray-500 mt-1">Current: <a href="../../Uploads/images/<?php echo htmlspecialchars($current_user['profile_image']); ?>" target="_blank">View Image</a></p>
+                            <?php if ($current_user['avatar']): ?>
+                                <p class="text-sm text-gray-500 mt-1">Current: <a href="../../uploads/users/<?php echo htmlspecialchars($current_user['avatar']); ?>" target="_blank">View Image</a></p>
                             <?php endif; ?>
                         </div>
                         <div class="md:col-span-2">

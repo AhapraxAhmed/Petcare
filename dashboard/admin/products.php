@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'add') {
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $image_name = time() . '_' . basename($_FILES['image']['name']);
         $image_path = $upload_dir . $image_name;
-        $relative_path = 'Uploads/products/' . $image_name;
+        $relative_path = 'uploads/products/' . $image_name;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
             $image_url = $relative_path; // Store relative path
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'update' && $product_id
     if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
         $image_name = time() . '_' . basename($_FILES['image']['name']);
         $image_path = $upload_dir . $image_name;
-        $relative_path = 'Uploads/products/' . $image_name;
+        $relative_path = 'uploads/products/' . $image_name;
 
         if (move_uploaded_file($_FILES['image']['tmp_name'], $image_path)) {
             $image_url = $relative_path; // Update with new image path
@@ -200,7 +200,7 @@ $db->closeConnection();
                                 <label class="block text-sm font-medium text-gray-700">Image</label>
                                 <input type="file" name="image" accept="image/*" class="mt-1 p-2 w-full border rounded-md">
                                 <?php if ($action === 'update' && !empty($product['image_url'])): ?>
-                                    <img src="/<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" class="mt-2 h-20 w-20 object-cover">
+                                    <img src="../../<?php echo htmlspecialchars($product['image_url']); ?>" alt="Product Image" class="mt-2 h-20 w-20 object-cover">
                                     <input type="hidden" name="existing_image" value="<?php echo htmlspecialchars($product['image_url']); ?>">
                                 <?php endif; ?>
                             </div>

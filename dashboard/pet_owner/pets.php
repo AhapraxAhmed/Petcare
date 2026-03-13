@@ -90,6 +90,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Invalid pet selection.";
         }
+    } elseif ($action === 'edit_pet') {
+        $pet_id = (int)$_POST['pet_id'];
+        $name = sanitize_input($_POST['name']);
+        $species = sanitize_input($_POST['species']);
+        $breed = sanitize_input($_POST['breed']);
+        $age = (int)$_POST['age'];
+        $gender = sanitize_input($_POST['gender']);
+        $weight = (float)$_POST['weight'];
+        $color = sanitize_input($_POST['color']);
+        $microchip_id = sanitize_input($_POST['microchip_id']);
+        $medical_notes = sanitize_input($_POST['medical_notes']);
+        
+        // Check if pet belongs to user
+        $stmt = $conn->prepare("SELECT image FROM pets WHERE pet_id = ? AND owner_id = ?");
+        $stmt->bind_param("ii", $pet_id, $user_id);
+        $stmt->execute();
+        $pet_res = $stmt->get_result();
+        
+        if ($pet_dat = $pet_res->fetch_assoc()) {
+            $profile_image = $pet_dat['image'];
+            // Handle file upload
+            if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+                $upload_result = upload_file($_FILES['profile_image'], UPLOAD_DIR_PETS);
+                if ($upload_result['success']) {
+                    $profile_image = $upload_result['filename'];
+                } else {
+                    $error = "Failed to upload image: " . $upload_result['message'];
+                }
+            }
+            
+            if (!$error) {
+                $stmt = $conn->prepare("UPDATE pets SET name = ?, species = ?, breed = ?, age = ?, gender = ?, weight = ?, color = ?, microchip_id = ?, image = ?, medical_history = ? WHERE pet_id = ? AND owner_id = ?");
+                $stmt->bind_param("sssisdssssii", $name, $species, $breed, $age, $gender, $weight, $color, $microchip_id, $profile_image, $medical_notes, $pet_id, $user_id);
+                
+                if ($stmt->execute()) {
+                    $message = "Pet details updated successfully!";
+                } else {
+                    $error = "Failed to update pet details.";
+                }
+            }
+        } else {
+            $error = "Invalid pet selection.";
+        }
+    } elseif ($action === 'delete_pet') {
+        $pet_id = (int)$_POST['pet_id'];
+        $stmt = $conn->prepare("DELETE FROM pets WHERE pet_id = ? AND owner_id = ?");
+        $stmt->bind_param("ii", $pet_id, $user_id);
+        if ($stmt->execute()) {
+            $message = "Pet deleted successfully!";
+        } else {
+            $error = "Failed to delete pet.";
+        }
     }
 }
 
@@ -112,6 +164,7 @@ $shelters = $conn->query("SELECT id as shelter_id, name as shelter_name FROM use
 
 $show_add_form = isset($_GET['action']) && $_GET['action'] === 'add';
 $show_shelter_form = isset($_GET['action']) && $_GET['action'] === 'send_to_shelter';
+$show_edit_form = isset($_GET['action']) && $_GET['action'] === 'edit';
 $view_pet_id = isset($_GET['id']) ? (int)$_GET['id'] : null;
 $view_pet = null;
 
@@ -289,6 +342,101 @@ if ($view_pet_id) {
                     </form>
                 </div>
 
+                <?php elseif ($show_edit_form && $view_pet): ?>
+                <!-- Edit Pet Form -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-semibold text-gray-800">Edit Pet: <?php echo htmlspecialchars($view_pet['name']); ?></h3>
+                        <a href="pets.php?id=<?php echo $view_pet['pet_id']; ?>" class="text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-times text-xl"></i>
+                        </a>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                        <input type="hidden" name="action" value="edit_pet">
+                        <input type="hidden" name="pet_id" value="<?php echo $view_pet['pet_id']; ?>">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Pet Name *</label>
+                                <input type="text" name="name" value="<?php echo htmlspecialchars($view_pet['name']); ?>" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Species *</label>
+                                <select name="species" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Dog" <?php echo $view_pet['species'] === 'Dog' ? 'selected' : ''; ?>>Dog</option>
+                                    <option value="Cat" <?php echo $view_pet['species'] === 'Cat' ? 'selected' : ''; ?>>Cat</option>
+                                    <option value="Bird" <?php echo $view_pet['species'] === 'Bird' ? 'selected' : ''; ?>>Bird</option>
+                                    <option value="Rabbit" <?php echo $view_pet['species'] === 'Rabbit' ? 'selected' : ''; ?>>Rabbit</option>
+                                    <option value="Fish" <?php echo $view_pet['species'] === 'Fish' ? 'selected' : ''; ?>>Fish</option>
+                                    <option value="Hamster" <?php echo $view_pet['species'] === 'Hamster' ? 'selected' : ''; ?>>Hamster</option>
+                                    <option value="Other" <?php echo $view_pet['species'] === 'Other' ? 'selected' : ''; ?>>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Breed</label>
+                                <input type="text" name="breed" value="<?php echo htmlspecialchars($view_pet['breed']); ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Age (years)</label>
+                                <input type="number" name="age" min="0" max="50" value="<?php echo $view_pet['age']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                                <select name="gender" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="male" <?php echo $view_pet['gender'] === 'male' ? 'selected' : ''; ?>>Male</option>
+                                    <option value="female" <?php echo $view_pet['gender'] === 'female' ? 'selected' : ''; ?>>Female</option>
+                                    <option value="unknown" <?php echo $view_pet['gender'] === 'unknown' ? 'selected' : ''; ?>>Unknown</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Weight (lbs)</label>
+                                <input type="number" name="weight" step="0.1" min="0" value="<?php echo $view_pet['weight']; ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Color</label>
+                                <input type="text" name="color" value="<?php echo htmlspecialchars($view_pet['color']); ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Microchip ID</label>
+                            <input type="text" name="microchip_id" value="<?php echo htmlspecialchars($view_pet['microchip_id']); ?>" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Profile Image (leave empty to keep current)</label>
+                            <input type="file" name="profile_image" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <?php if ($view_pet['profile_image']): ?>
+                            <p class="text-sm text-gray-500 mt-2">Current image: <?php echo htmlspecialchars($view_pet['profile_image']); ?></p>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Medical Notes</label>
+                            <textarea name="medical_notes" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"><?php echo htmlspecialchars($view_pet['medical_notes']); ?></textarea>
+                        </div>
+                        
+                        <div class="flex items-center justify-end space-x-4">
+                            <a href="pets.php?id=<?php echo $view_pet['pet_id']; ?>" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">Cancel</a>
+                            <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-save mr-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
                 <?php elseif ($show_shelter_form): ?>
                 <!-- Send to Shelter Form -->
                 <div class="bg-white rounded-xl shadow-sm p-6">
@@ -342,9 +490,22 @@ if ($view_pet_id) {
                 <div class="bg-white rounded-xl shadow-sm p-6">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-xl font-semibold text-gray-800"><?php echo htmlspecialchars($view_pet['name']); ?></h3>
-                        <a href="pets.php" class="text-gray-600 hover:text-gray-800">
-                            <i class="fas fa-arrow-left mr-2"></i>Back to Pets
-                        </a>
+                        <div class="flex space-x-2">
+                            <a href="pets.php?action=edit&id=<?php echo $view_pet['pet_id']; ?>" class="bg-blue-100 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors">
+                                <i class="fas fa-edit mr-2"></i>Edit
+                            </a>
+                            <form method="POST" onsubmit="return confirm('Are you sure you want to delete this pet? This action cannot be undone.');" class="inline">
+                                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                                <input type="hidden" name="action" value="delete_pet">
+                                <input type="hidden" name="pet_id" value="<?php echo $view_pet['pet_id']; ?>">
+                                <button type="submit" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors">
+                                    <i class="fas fa-trash mr-2"></i>Delete
+                                </button>
+                            </form>
+                            <a href="pets.php" class="text-gray-600 hover:text-gray-800 px-4 py-2">
+                                <i class="fas fa-arrow-left mr-2"></i>Back to Pets
+                            </a>
+                        </div>
                     </div>
                     
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -442,7 +603,21 @@ if ($view_pet_id) {
                 <?php else: ?>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     <?php foreach ($pets as $pet): ?>
-                    <div class="bg-white rounded-xl shadow-sm p-6 pet-card">
+                    <div class="bg-white rounded-xl shadow-sm p-6 pet-card relative group">
+                        <!-- Card Quick Actions -->
+                        <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
+                            <a href="pets.php?action=edit&id=<?php echo $pet['pet_id']; ?>" class="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200" title="Edit Pet">
+                                <i class="fas fa-edit text-xs"></i>
+                            </a>
+                            <form method="POST" onsubmit="return confirm('Are you sure you want to delete this pet?');" class="inline">
+                                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+                                <input type="hidden" name="action" value="delete_pet">
+                                <input type="hidden" name="pet_id" value="<?php echo $pet['pet_id']; ?>">
+                                <button type="submit" class="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200" title="Delete Pet">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            </form>
+                        </div>
                         <div class="text-center mb-4">
                             <?php if ($pet['profile_image']): ?>
                             <img src="../../uploads/pets/<?php echo htmlspecialchars($pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($pet['name']); ?>" class="w-24 h-24 rounded-full object-cover mx-auto mb-3">

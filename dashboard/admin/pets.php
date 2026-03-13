@@ -9,10 +9,9 @@ $conn = $db->getConnection();
 
 // Fetch pets
 $pets = $conn->query("
-    SELECT p.*, u.name as owner_name, s.shelter_name
+    SELECT p.*, u.name as owner_name, u.role as owner_role
     FROM pets p
-    LEFT JOIN users u ON p.owner_id = u.user_id
-    LEFT JOIN shelters s ON p.shelter_id = s.shelter_id
+    LEFT JOIN users u ON p.owner_id = u.id
     ORDER BY p.created_at DESC
 ")->fetch_all(MYSQLI_ASSOC);
 $db->closeConnection();
@@ -103,7 +102,10 @@ $db->closeConnection();
                                     <td class="py-3"><?php echo htmlspecialchars($pet['name']); ?></td>
                                     <td><?php echo htmlspecialchars($pet['species']); ?></td>
                                     <td><?php echo htmlspecialchars($pet['breed'] ?? 'Unknown'); ?></td>
-                                    <td><?php echo htmlspecialchars($pet['owner_name'] ?? $pet['shelter_name'] ?? 'None'); ?></td>
+                                    <td>
+                                        <div class="font-medium text-gray-900"><?php echo htmlspecialchars($pet['owner_name'] ?? 'None'); ?></div>
+                                        <div class="text-xs text-gray-500"><?php echo ucfirst($pet['owner_role'] ?? ''); ?></div>
+                                    </td>
                                     <td><?php echo $pet['age'] ?? 'Unknown'; ?></td>
                                     <td><?php echo ucfirst($pet['gender'] ?? 'Unknown'); ?></td>
                                 </tr>

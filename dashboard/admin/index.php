@@ -42,10 +42,9 @@ $recent_users = $conn->query("SELECT name, email, role, created_at FROM users OR
 $recent_appointments = $conn->query("
     SELECT a.appointment_date, a.status, u.name as owner_name, p.name as pet_name, v.name as vet_name
     FROM appointments a
-    JOIN users u ON a.owner_id = u.user_id
+    JOIN users u ON a.owner_id = u.id
     JOIN pets p ON a.pet_id = p.pet_id
-    JOIN veterinarians vet ON a.vet_id = vet.vet_id
-    JOIN users v ON vet.user_id = v.user_id
+    JOIN users v ON a.vet_id = v.id
     ORDER BY a.created_at DESC LIMIT 5
 ")->fetch_all(MYSQLI_ASSOC);
 
@@ -217,26 +216,27 @@ $db->closeConnection();
                         <div class="space-y-4">
                             <?php 
                             $role_colors = [
-                                'pet_owner' => 'bg-blue-500',
-                                'veterinarian' => 'bg-green-500',
+                                'owner' => 'bg-blue-500',
+                                'vet' => 'bg-green-500',
                                 'shelter' => 'bg-purple-500',
                                 'admin' => 'bg-red-500'
                             ];
                             $role_names = [
-                                'pet_owner' => 'Pet Owners',
-                                'veterinarian' => 'Veterinarians',
+                                'owner' => 'Pet Owners',
+                                'vet' => 'Veterinarians',
                                 'shelter' => 'Shelters',
                                 'admin' => 'Administrators'
                             ];
                             $total_users = array_sum($stats['users'] ?? []);
                             
                             foreach ($stats['users'] ?? [] as $role => $count):
+                                if (empty($role) || !isset($role_colors[$role])) continue;
                                 $percentage = $total_users > 0 ? ($count / $total_users) * 100 : 0;
                             ?>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <div class="w-3 h-3 rounded-full <?php echo $role_colors[$role]; ?> mr-3"></div>
-                                    <span class="text-sm text-gray-600"><?php echo $role_names[$role]; ?></span>
+                                    <div class="w-3 h-3 rounded-full <?php echo $role_colors[$role] ?? 'bg-gray-400'; ?> mr-3"></div>
+                                    <span class="text-sm text-gray-600"><?php echo $role_names[$role] ?? 'Other'; ?></span>
                                 </div>
                                 <div class="flex items-center">
                                     <span class="text-sm font-medium text-gray-900 mr-2"><?php echo $count; ?></span>

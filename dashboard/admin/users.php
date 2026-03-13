@@ -15,13 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($action) {
         case 'toggle_status':
             $new_status = $_POST['is_verified'] === '1' ? 0 : 1;
-            $stmt = $conn->prepare("UPDATE users SET is_verified = ? WHERE user_id = ?");
+            $stmt = $conn->prepare("UPDATE users SET is_verified = ? WHERE id = ?");
             $stmt->bind_param("ii", $new_status, $user_id);
             $stmt->execute();
             break;
             
         case 'delete_user':
-            $stmt = $conn->prepare("DELETE FROM users WHERE user_id = ? AND role != 'admin'");
+            $stmt = $conn->prepare("DELETE FROM users WHERE id = ? AND role != 'admin'");
             $stmt->bind_param("i", $user_id);
             $stmt->execute();
             break;
@@ -73,7 +73,7 @@ if (!empty($params)) {
 }
 
 // Get users
-$query = "SELECT user_id, name, email, phone, role, is_verified, created_at FROM users $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset";
+$query = "SELECT id, name, email, phone, role, is_verified, created_at FROM users $where_clause ORDER BY created_at DESC LIMIT $limit OFFSET $offset";
 if (!empty($params)) {
     $stmt = $conn->prepare($query);
     $stmt->bind_param($param_types, ...$params);
@@ -160,8 +160,8 @@ $db->closeConnection();
                         <div>
                             <select name="role" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 <option value="">All Roles</option>
-                                <option value="pet_owner" <?php echo $role_filter === 'pet_owner' ? 'selected' : ''; ?>>Pet Owners</option>
-                                <option value="veterinarian" <?php echo $role_filter === 'veterinarian' ? 'selected' : ''; ?>>Veterinarians</option>
+                                <option value="owner" <?php echo $role_filter === 'owner' ? 'selected' : ''; ?>>Pet Owners</option>
+                                <option value="vet" <?php echo $role_filter === 'vet' ? 'selected' : ''; ?>>Veterinarians</option>
                                 <option value="shelter" <?php echo $role_filter === 'shelter' ? 'selected' : ''; ?>>Shelters</option>
                                 <option value="admin" <?php echo $role_filter === 'admin' ? 'selected' : ''; ?>>Administrators</option>
                             </select>
@@ -206,7 +206,7 @@ $db->closeConnection();
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 py-1 text-xs font-medium rounded-full <?php 
                                             echo $user_row['role'] === 'admin' ? 'bg-red-100 text-red-800' : 
-                                                 ($user_row['role'] === 'veterinarian' ? 'bg-green-100 text-green-800' : 
+                                                 ($user_row['role'] === 'vet' ? 'bg-green-100 text-green-800' : 
                                                   ($user_row['role'] === 'shelter' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800')); 
                                         ?>">
                                             <?php echo ucfirst(str_replace('_', ' ', $user_row['role'])); ?>
@@ -230,7 +230,7 @@ $db->closeConnection();
                                             <?php if ($user_row['role'] !== 'admin'): ?>
                                             <form method="POST" class="inline">
                                                 <input type="hidden" name="action" value="toggle_status">
-                                                <input type="hidden" name="user_id" value="<?php echo $user_row['user_id']; ?>">
+                                                <input type="hidden" name="user_id" value="<?php echo $user_row['id']; ?>">
                                                 <input type="hidden" name="is_verified" value="<?php echo $user_row['is_verified']; ?>">
                                                 <button type="submit" class="text-blue-600 hover:text-blue-900">
                                                     <?php echo $user_row['is_verified'] ? 'Suspend' : 'Verify'; ?>
@@ -239,7 +239,7 @@ $db->closeConnection();
                                             
                                             <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?')">
                                                 <input type="hidden" name="action" value="delete_user">
-                                                <input type="hidden" name="user_id" value="<?php echo $user_row['user_id']; ?>">
+                                                <input type="hidden" name="user_id" value="<?php echo $user_row['id']; ?>">
                                                 <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
                                             </form>
                                             <?php else: ?>
