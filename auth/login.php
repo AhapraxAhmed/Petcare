@@ -121,7 +121,7 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
 
     <div class="w-full max-w-md relative z-10">
         <!-- Logo and heading -->
-        <div class="text-center mb-8">
+        <div class="text-center mb-2">
             <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full mb-4">
                 <i class="fas fa-shield-alt text-2xl text-blue-600"></i>
             </div>
@@ -130,7 +130,7 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
         </div>
 
         <!-- Card -->
-        <div class="glass-effect rounded-2xl p-8 shadow-2xl">
+        <div class="glass-effect rounded-2xl p-6 shadow-2xl">
             <!-- error message -->
             <?php if ($error_message): ?>
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
@@ -150,7 +150,7 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
             <!-- Email/Password Form -->
             <form method="POST" class="space-y-6">
                 <div>
-                    <label for="email" class="block text-sm font-medium text-white mb-2">
+                    <label for="email" class="block text-sm font-medium text-white mb-1">
                         <i class="fas fa-envelope mr-2"></i>Email Address
                     </label>
                     <input type="email" id="email" name="email" required
@@ -159,7 +159,7 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-medium text-white mb-2">
+                    <label for="password" class="block text-sm font-medium text-white mb-1">
                         <i class="fas fa-lock mr-2"></i>Password
                     </label>
                     <div class="relative">

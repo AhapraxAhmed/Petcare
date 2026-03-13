@@ -170,7 +170,7 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Select Pet</label>
-                                <select name="pet_id" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                <select name="pet_id" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                                     <option value="">Choose your pet...</option>
                                     <?php foreach ($user_pets as $pet): ?>
                                         <option value="<?php echo $pet['pet_id']; ?>">
@@ -181,7 +181,7 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Select Veterinarian</label>
-                                <select name="vet_id" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                <select name="vet_id" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                                     <option value="">Choose veterinarian...</option>
                                     <?php foreach ($veterinarians as $vet): ?>
                                         <option value="<?php echo $vet['vet_id']; ?>">
@@ -194,11 +194,11 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Appointment Date & Time</label>
-                                <input type="datetime-local" name="appointment_date" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                <input type="datetime-local" name="appointment_date" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Visit</label>
-                                <textarea name="reason" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" rows="3" placeholder="Describe the reason for this appointment..."></textarea>
+                                <textarea name="reason" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" rows="3" placeholder="Describe the reason for this appointment..."></textarea>
                             </div>
                         </div>
                         <div class="mt-6">

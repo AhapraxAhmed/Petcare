@@ -85,7 +85,7 @@ class MailService {
             .footer { padding: 20px; text-align: center; color: #666; }
             .button { background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px; }
         </style>
-        <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
+        <link rel='icon' href='/furshield/assets/images/favicon.png' type='image/x-icon'>
 </head>
     <body>
         <div class='container'>
@@ -167,7 +167,7 @@ class MailService {
                 .content { padding: 20px; background: #f9f9f9; }
                 .appointment-details { background: white; padding: 15px; border-radius: 5px; margin: 20px 0; }
             </style>
-            <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
+            <link rel='icon' href='/furshield/assets/images/favicon.png' type='image/x-icon'>
 </head>
         <body>
             <div class='container'>

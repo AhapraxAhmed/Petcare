@@ -304,23 +304,23 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input type="text" name="name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
+                                <input type="text" name="name" class="block w-full rounded-lg border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-1" 
                                        value="<?php echo htmlspecialchars($user_info['name']); ?>" required maxlength="100">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                <input type="email" class="block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm" 
+                                <input type="email" class="block w-full rounded-lg border border-gray-800 shadow-sm p-1" 
                                        value="<?php echo htmlspecialchars($user_info['email']); ?>" disabled>
                                 <p class="text-sm text-gray-500 mt-1">Email cannot be changed</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" name="phone" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" 
+                                <input type="tel" name="phone" class="block w-full rounded-lg border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-1" 
                                        value="<?php echo htmlspecialchars($user_info['phone']); ?>" pattern="^\+?[1-9]\d{1,14}$">
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                                <textarea name="address" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" rows="3"><?php echo htmlspecialchars($user_info['address']); ?></textarea>
+                                <textarea name="address" class="block w-full rounded-lg border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-1" rows="3"><?php echo htmlspecialchars($user_info['address']); ?></textarea>
                             </div>
                         </div>
 
@@ -350,16 +350,16 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                                <input type="password" name="current_password" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                <input type="password" name="current_password" class="block w-full border border-gray-800 rounded-lg p-1 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-1" required>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                                <input type="password" name="new_password" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required minlength="8">
+                                <input type="password" name="new_password" class="block w-full border border-gray-800 rounded-lg p-1 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-1" required minlength="8">
                                 <p class="text-sm text-gray-500 mt-1">Minimum 8 characters</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
-                                <input type="password" name="confirm_password" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
+                                <input type="password" name="confirm_password" class="block w-full border border-gray-800 rounded-lg p-1 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 p-1" required>
                             </div>
                         </div>
                         <div class="mt-6">

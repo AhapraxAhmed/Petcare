@@ -27,12 +27,7 @@ $pets_stmt->close();
 $selected_pet_id = isset($_GET['pet_id']) ? (int)$_GET['pet_id'] : (count($user_pets) > 0 ? $user_pets[0]['pet_id'] : null);
 
 if ($selected_pet_id) {
-    $records_query = "SELECT hr.*, u.name as vet_name, v.clinic_name 
-                     FROM health_records hr 
-                     LEFT JOIN veterinarians v ON hr.vet_id = v.vet_id 
-                     LEFT JOIN users u ON v.user_id = u.id 
-                     WHERE hr.pet_id = ? 
-                     ORDER BY hr.visit_date DESC";
+    $records_query = "SELECT * FROM health_records WHERE pet_id = ? ORDER BY date DESC";
     $records_stmt = $conn->prepare($records_query);
     $records_stmt->bind_param("i", $selected_pet_id);
     $records_stmt->execute();
@@ -186,49 +181,28 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                                             <div class="flex items-center justify-between mb-2">
                                                 <h6 class="font-medium">
                                                     <i class="fas fa-calendar mr-2"></i>
-                                                    <?php echo date('F j, Y', strtotime($record['visit_date'])); ?>
+                                                    <?php echo date('F j, Y', strtotime($record['date'])); ?>
                                                     <span class="ml-2 px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                                                        <?php echo ucfirst($record['visit_type']); ?>
+                                                        <?php echo ucfirst($record['type']); ?>
                                                     </span>
                                                 </h6>
                                             </div>
-                                            <?php if ($record['vet_name']): ?>
+                                            <?php if (!empty($record['vet_name'])): ?>
                                                 <p class="text-sm text-gray-600 mb-2">
                                                     <i class="fas fa-user-md mr-2"></i>
                                                     Dr. <?php echo htmlspecialchars($record['vet_name']); ?>
-                                                    <?php if ($record['clinic_name']): ?>
-                                                        - <?php echo htmlspecialchars($record['clinic_name']); ?>
-                                                    <?php endif; ?>
                                                 </p>
                                             <?php endif; ?>
-                                            <?php if ($record['diagnosis']): ?>
+                                            <?php if (!empty($record['description'])): ?>
                                                 <div class="mb-2">
-                                                    <p><strong class="text-gray-700">Diagnosis:</strong></p>
-                                                    <p class="text-gray-600"><?php echo htmlspecialchars($record['diagnosis']); ?></p>
+                                                    <p><strong class="text-gray-700">Description:</strong></p>
+                                                    <p class="text-gray-600"><?php echo htmlspecialchars($record['description']); ?></p>
                                                 </div>
                                             <?php endif; ?>
-                                            <?php if ($record['treatment']): ?>
+                                            <?php if (!empty($record['document_path'])): ?>
                                                 <div class="mb-2">
-                                                    <p><strong class="text-gray-700">Treatment:</strong></p>
-                                                    <p class="text-gray-600"><?php echo htmlspecialchars($record['treatment']); ?></p>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if ($record['medications']): ?>
-                                                <div class="mb-2">
-                                                    <p><strong class="text-gray-700">Medications:</strong></p>
-                                                    <p class="text-gray-600"><?php echo htmlspecialchars($record['medications']); ?></p>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if ($record['notes']): ?>
-                                                <div class="mb-2">
-                                                    <p><strong class="text-gray-700">Notes:</strong></p>
-                                                    <p class="text-gray-600"><?php echo htmlspecialchars($record['notes']); ?></p>
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if ($record['next_visit_date']): ?>
-                                                <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3">
-                                                    <i class="fas fa-clock mr-2"></i>
-                                                    Next visit: <?php echo date('F j, Y', strtotime($record['next_visit_date'])); ?>
+                                                    <p><strong class="text-gray-700">Document:</strong></p>
+                                                    <a href="../../uploads/health_records/<?php echo htmlspecialchars($record['document_path']); ?>" target="_blank" class="text-blue-600 hover:underline">View Document</a>
                                                 </div>
                                             <?php endif; ?>
                                         </div>

@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pet_data = $pet_result->fetch_assoc()) {
             $pet_name = $pet_data['name'];
             // Create adoption listing
-            $stmt = $conn->prepare("INSERT INTO adoption_listings (shelter_id, pet_id, name, species, breed, age, description, status) 
-                                    SELECT ?, ?, name, species, breed, age, ?, 'available' FROM pets WHERE pet_id = ?");
-            $stmt->bind_param("iisi", $shelter_id, $pet_id, $application_text, $pet_id);
+            $stmt = $conn->prepare("INSERT INTO adoption_listings (shelter_id, name, species, breed, age, description, status, image) 
+                                    SELECT ?, name, species, breed, age, ?, 'available', image FROM pets WHERE pet_id = ?");
+            $stmt->bind_param("isi", $shelter_id, $application_text, $pet_id);
             
             if ($stmt->execute()) {
                 $listing_id = $conn->insert_id;
@@ -351,7 +351,7 @@ if ($view_pet_id) {
                         <div class="lg:col-span-1">
                             <div class="text-center">
                                 <?php if ($view_pet['profile_image']): ?>
-                                <img src="../../Uploads/pets/<?php echo htmlspecialchars($view_pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($view_pet['name']); ?>" class="w-48 h-48 rounded-full object-cover mx-auto mb-4">
+                                <img src="../../uploads/pets/<?php echo htmlspecialchars($view_pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($view_pet['name']); ?>" class="w-48 h-48 rounded-full object-cover mx-auto mb-4">
                                 <?php else: ?>
                                 <div class="w-48 h-48 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <i class="fas fa-paw text-6xl text-gray-400"></i>
@@ -445,7 +445,7 @@ if ($view_pet_id) {
                     <div class="bg-white rounded-xl shadow-sm p-6 pet-card">
                         <div class="text-center mb-4">
                             <?php if ($pet['profile_image']): ?>
-                            <img src="../../Uploads/pets/<?php echo htmlspecialchars($pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($pet['name']); ?>" class="w-24 h-24 rounded-full object-cover mx-auto mb-3">
+                            <img src="../../uploads/pets/<?php echo htmlspecialchars($pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($pet['name']); ?>" class="w-24 h-24 rounded-full object-cover mx-auto mb-3">
                             <?php else: ?>
                             <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
                                 <i class="fas fa-paw text-2xl text-gray-400"></i>
