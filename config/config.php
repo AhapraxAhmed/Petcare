@@ -1,11 +1,12 @@
-<?php
-// FurShield Application Configuration
+// Load environment variables
+require_once __DIR__ . '/../includes/env_loader.php';
+loadEnv(__DIR__ . '/../.env');
 
 // Database Configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'furshield'); // Fixed database name to match furshield.sql
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'furshield');
+define('DB_USER', $_ENV['DB_USER'] ?? 'root');
+define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 
 // Application Configuration
 define('APP_NAME', 'FurShield');
@@ -29,7 +30,14 @@ define('CSRF_ENABLED', true);
 
 // Pagination
 define('ITEMS_PER_PAGE', 10);
-define('GEMINI_API_KEY', 'AIzaSyBUFYPfxdAiiu0Ty3DkBIzwg7ylnbmHzXI');
+define('GEMINI_API_KEY', $_ENV['GEMINI_API_KEY'] ?? '');
+
+// Social Login Configuration
+define('GOOGLE_CLIENT_ID', $_ENV['GOOGLE_CLIENT_ID'] ?? '');
+define('GOOGLE_CLIENT_SECRET', $_ENV['GOOGLE_CLIENT_SECRET'] ?? '');
+define('GITHUB_CLIENT_ID', $_ENV['GITHUB_CLIENT_ID'] ?? '');
+define('GITHUB_CLIENT_SECRET', $_ENV['GITHUB_CLIENT_SECRET'] ?? '');
+
 // Timezone
 date_default_timezone_set('Asia/Karachi');
 

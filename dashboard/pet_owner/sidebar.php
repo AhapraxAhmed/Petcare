@@ -10,9 +10,9 @@
     
     <nav class="mt-6">
         <?php
-        // Get the current page name
-        $current_page = basename($_SERVER['PHP_SELF']);
-        ?>
+// Get the current page name
+$current_page = basename($_SERVER['PHP_SELF']);
+?>
         <a href="index.php" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-700 transition-colors <?php echo $current_page === 'index.php' ? 'text-gray-700 bg-blue-50 border-r-4 border-blue-500' : ''; ?>">
             <i class="fas fa-tachometer-alt mr-3"></i> 
         </a>
@@ -33,29 +33,35 @@
     <div class="absolute bottom-0 w-16 mb-2">
     <!-- Profile Button -->
     <button id="userMenuBtn" class="flex items-center p-2">
-        <img src="<?php 
-            if (empty($user['profile_image'])) {
-                echo '/furshield/assets/images/you.jpg';
-            } else {
-                echo (isset($user['google_id']) || isset($user['github_id'])) 
-                    ? htmlspecialchars($user['profile_image']) 
-                    : '../../Uploads/images/' . htmlspecialchars($user['profile_image']);
-            }
-        ?>" 
+        <img src="<?php
+if (empty($user['avatar'])) {
+    echo '/furshield/assets/images/you.jpg';
+}
+else {
+    echo(isset($user['google_id']) || isset($user['github_id']))
+        ? htmlspecialchars($user['avatar'])
+        : '../../Uploads/images/' . htmlspecialchars($user['avatar']);
+}
+?>" 
         alt="User" class="w-10 h-10 rounded-full">
     </button>
 
     <!-- Collapsible Menu -->
-    <div id="userMenu" class="hidden absolute bottom-16 left-0 w-16 p-2 bg-white shadow-lg rounded-lg z-50 flex flex-col items-center space-y-4">
+    <div id="userMenu" class="hidden absolute bottom-14 left-0 w-16 p-2 bg-white shadow-lg rounded-lg z-50 flex flex-col items-center space-y-4">
         <!-- Profile -->
         <a href="profile.php" 
-           class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
+           class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
             <i class="fas fa-user text-gray-700"></i>
         </a>
+         <!-- Visit Website -->
+         <a href="../../index.php" 
+           class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-colors" title="Visit Website">
+            <i class="fas fa-globe text-gray-700"></i>
+        </a>
         <!-- Logout -->
-        <a href="../../auth/logout.php" 
-           class="w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
-            <i class="fas fa-sign-out-alt"></i>
+       <a href="#" onclick="logoutUser()"title="Logout"
+        class="w-8 h-8 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors">
+        <i class="fas fa-sign-out-alt"></i>
         </a>
     </div>
 </div>
@@ -67,6 +73,12 @@
     userMenuBtn.addEventListener('click', () => {
         userMenu.classList.toggle('hidden');
     });
+    
+function logoutUser() {
+    setTimeout(function() {
+        window.location.href = "../../auth/logout.php";
+    }, 1000);
+}
 </script>
 
 

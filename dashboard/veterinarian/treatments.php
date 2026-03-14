@@ -21,11 +21,11 @@ if (!$appointment_id) {
 
 // Verify the appointment belongs to the veterinarian
 $appointment = $conn->query("
-    SELECT a.appointment_id, p.name as pet_name, u.name as owner_name
+    SELECT a.id as appointment_id, p.name as pet_name, u.name as owner_name
     FROM appointments a
     JOIN pets p ON a.pet_id = p.pet_id
-    JOIN users u ON a.owner_id = u.user_id
-    WHERE a.appointment_id = $appointment_id AND a.vet_id = $vet_id
+    JOIN users u ON a.owner_id = u.id
+    WHERE a.id = $appointment_id AND a.vet_id = $vet_id
 ")->fetch_assoc();
 
 if (!$appointment) {
@@ -41,7 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param("iis", $appointment_id, $vet_id, $treatment_details);
         if ($stmt->execute()) {
             $message = "Treatment added successfully!";
-        } else {
+        }
+        else {
             $message = "Error adding treatment.";
         }
     }
@@ -101,7 +102,7 @@ $db->closeConnection();
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
@@ -128,7 +129,8 @@ $db->closeConnection();
             <i class="fas fa-check-circle mr-2"></i>
             <?php echo $message; ?>
         </div>
-        <?php endif; ?>
+        <?php
+endif; ?>
 
         <form method="POST" class="bg-white p-6 rounded-lg shadow-sm">
             <div class="mb-4">

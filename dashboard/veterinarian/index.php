@@ -90,13 +90,13 @@ $pending_appointments = $stmt->get_result()->fetch_assoc()['count'];
 
 // Today's schedule
 $stmt = $conn->prepare("
-    SELECT a.id as appointment_id, a.appointment_date, a.reason, a.status,
+    SELECT a.id as appointment_id, a.appointment_date, a.notes, a.status,
            p.name as pet_name, p.species, p.breed,
            u.name as owner_name, u.phone as owner_phone
     FROM appointments a
     JOIN pets p ON a.pet_id = p.pet_id
     JOIN users u ON a.owner_id = u.id
-    WHERE a.vet_id = ? 
+    WHERE a.vet_id = ?
     AND DATE(a.appointment_date) = CURDATE()
     ORDER BY a.appointment_date ASC
 ");
@@ -124,13 +124,13 @@ $recent_patients = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
 // Upcoming appointments
 $stmt = $conn->prepare("
-    SELECT a.id as appointment_id, a.appointment_date, a.reason, a.status,
+    SELECT a.id as appointment_id, a.appointment_date, a.notes, a.status,
            p.name as pet_name, p.species,
            u.name as owner_name
     FROM appointments a
     JOIN pets p ON a.pet_id = p.pet_id
     JOIN users u ON a.owner_id = u.id
-    WHERE a.vet_id = ? 
+    WHERE a.vet_id = ?
     AND a.appointment_date > NOW()
     AND a.status IN ('pending', 'confirmed')
     ORDER BY a.appointment_date ASC
@@ -184,7 +184,7 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
@@ -207,7 +207,8 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                     <?php echo $pending_appointments; ?>
                                 </span>
-                                <?php endif; ?>
+                                <?php
+endif; ?>
                             </button>
                         </div>
                     </div>
@@ -290,7 +291,8 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             <h4 class="text-lg font-medium text-gray-600 mb-2">No appointments today</h4>
                             <p class="text-gray-500">Enjoy your free day!</p>
                         </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                         <div class="space-y-4">
                             <?php foreach ($todays_schedule as $appointment): ?>
                             <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -306,17 +308,18 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     </div>
                                     <div class="text-right">
                                         <p class="text-sm font-medium text-gray-900"><?php echo date('g:i A', strtotime($appointment['appointment_date'])); ?></p>
-                                        <span class="px-2 py-1 text-xs rounded-full status-badge <?php 
-                                            echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                                 ($appointment['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'); 
-                                        ?>">
+                                        <span class="px-2 py-1 text-xs rounded-full status-badge <?php
+        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' :
+            ($appointment['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800');
+?>">
                                             <?php echo ucfirst($appointment['status']); ?>
                                         </span>
                                     </div>
                                 </div>
                                 <?php if ($appointment['reason']): ?>
                                 <p class="text-sm text-gray-600 ml-13"><?php echo htmlspecialchars($appointment['reason']); ?></p>
-                                <?php endif; ?>
+                                <?php
+        endif; ?>
                                 <div class="flex items-center justify-between mt-3">
                                     <span class="text-xs text-gray-500">
                                         <i class="fas fa-phone mr-1"></i>
@@ -326,15 +329,19 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                         <?php if ($appointment['status'] === 'pending'): ?>
                                         <button class="text-green-600 text-sm hover:underline">Confirm</button>
                                         <button class="text-red-600 text-sm hover:underline">Decline</button>
-                                        <?php else: ?>
+                                        <?php
+        else: ?>
                                         <a href="treatments.php?appointment_id=<?php echo $appointment['appointment_id']; ?>" class="text-blue-600 text-sm hover:underline">Add Treatment</a>
-                                        <?php endif; ?>
+                                        <?php
+        endif; ?>
                                     </div>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </div>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
 
                     <!-- Upcoming Appointments -->
@@ -349,27 +356,31 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             <i class="fas fa-calendar-plus text-4xl text-gray-300 mb-3"></i>
                             <p class="text-gray-500 text-sm">No upcoming appointments</p>
                         </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                         <div class="space-y-4">
                             <?php foreach ($upcoming_appointments as $appointment): ?>
                             <div class="border-l-4 border-green-500 pl-4 py-2">
                                 <div class="flex items-center justify-between mb-1">
                                     <h4 class="font-medium text-gray-900"><?php echo htmlspecialchars($appointment['pet_name']); ?></h4>
-                                    <span class="px-2 py-1 text-xs rounded-full <?php 
-                                        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'; 
-                                    ?>">
+                                    <span class="px-2 py-1 text-xs rounded-full <?php
+        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+?>">
                                         <?php echo ucfirst($appointment['status']); ?>
                                     </span>
                                 </div>
                                 <p class="text-sm text-gray-600"><?php echo htmlspecialchars($appointment['owner_name']); ?></p>
                                 <p class="text-sm text-gray-500"><?php echo format_date($appointment['appointment_date'], 'M j, g:i A'); ?></p>
-                                <?php if ($appointment['reason']): ?>
-                                <p class="text-xs text-gray-500 mt-1"><?php echo htmlspecialchars($appointment['reason']); ?></p>
-                                <?php endif; ?>
+                                <?php if ($appointment['notes']): ?>
+                                <p class="text-xs text-gray-500 mt-1"><?php echo htmlspecialchars($appointment['notes']); ?></p>
+                                <?php
+        endif; ?>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </div>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
                 </div>
 
@@ -387,7 +398,8 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             <i class="fas fa-paw text-4xl text-gray-300 mb-3"></i>
                             <p class="text-gray-500 text-sm">No patients yet</p>
                         </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                         <div class="space-y-4">
                             <?php foreach ($recent_patients as $patient): ?>
                             <div class="flex items-center justify-between">
@@ -403,9 +415,11 @@ $upcoming_appointments = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 </div>
                                 <a href="patients.php?id=<?php echo $patient['pet_id']; ?>" class="text-green-600 text-sm hover:underline">View</a>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </div>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
 
                     <!-- Quick Actions -->

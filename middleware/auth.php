@@ -3,6 +3,12 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../includes/functions.php';
 
+// Prevent browser caching for all authenticated pages
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");
+
 function requireAuth($required_role = null) {
     if (!is_logged_in()) {
         redirect(APP_URL . '/auth/login.php');

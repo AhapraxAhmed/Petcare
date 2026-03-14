@@ -119,7 +119,7 @@ $db->closeConnection();
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
@@ -214,25 +214,26 @@ $db->closeConnection();
                     <div class="bg-white rounded-xl shadow-sm p-6 animate-fade-in" style="animation-delay: 0.4s;">
                         <h3 class="text-lg font-semibold text-gray-800 mb-4">User Distribution</h3>
                         <div class="space-y-4">
-                            <?php 
-                            $role_colors = [
-                                'owner' => 'bg-blue-500',
-                                'vet' => 'bg-green-500',
-                                'shelter' => 'bg-purple-500',
-                                'admin' => 'bg-red-500'
-                            ];
-                            $role_names = [
-                                'owner' => 'Pet Owners',
-                                'vet' => 'Veterinarians',
-                                'shelter' => 'Shelters',
-                                'admin' => 'Administrators'
-                            ];
-                            $total_users = array_sum($stats['users'] ?? []);
-                            
-                            foreach ($stats['users'] ?? [] as $role => $count):
-                                if (empty($role) || !isset($role_colors[$role])) continue;
-                                $percentage = $total_users > 0 ? ($count / $total_users) * 100 : 0;
-                            ?>
+                            <?php
+$role_colors = [
+    'owner' => 'bg-blue-500',
+    'vet' => 'bg-green-500',
+    'shelter' => 'bg-purple-500',
+    'admin' => 'bg-red-500'
+];
+$role_names = [
+    'owner' => 'Pet Owners',
+    'vet' => 'Veterinarians',
+    'shelter' => 'Shelters',
+    'admin' => 'Administrators'
+];
+$total_users = array_sum($stats['users'] ?? []);
+
+foreach ($stats['users'] ?? [] as $role => $count):
+    if (empty($role) || !isset($role_colors[$role]))
+        continue;
+    $percentage = $total_users > 0 ? ($count / $total_users) * 100 : 0;
+?>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <div class="w-3 h-3 rounded-full <?php echo $role_colors[$role] ?? 'bg-gray-400'; ?> mr-3"></div>
@@ -246,7 +247,8 @@ $db->closeConnection();
                             <div class="w-full bg-gray-200 rounded-full h-2">
                                 <div class="<?php echo $role_colors[$role]; ?> h-2 rounded-full" style="width: <?php echo $percentage; ?>%"></div>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </div>
                     </div>
 
@@ -267,7 +269,8 @@ $db->closeConnection();
                                 </div>
                                 <span class="text-xs text-gray-500"><?php echo format_date($recent_user['created_at'], 'M j'); ?></span>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </div>
                         <a href="users.php" class="mt-4 text-blue-600 text-sm hover:underline">View all users →</a>
                     </div>
@@ -283,15 +286,16 @@ $db->closeConnection();
                                 <p class="text-xs text-gray-600">Vet: <?php echo htmlspecialchars($appointment['vet_name']); ?></p>
                                 <div class="flex items-center justify-between mt-1">
                                     <span class="text-xs text-gray-500"><?php echo format_date($appointment['appointment_date'], 'M j, g:i A'); ?></span>
-                                    <span class="px-2 py-1 text-xs rounded-full <?php 
-                                        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                             ($appointment['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'); 
-                                    ?>">
+                                    <span class="px-2 py-1 text-xs rounded-full <?php
+    echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' :
+        ($appointment['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800');
+?>">
                                         <?php echo ucfirst($appointment['status']); ?>
                                     </span>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </div>
                         <a href="appointments.php" class="mt-4 text-blue-600 text-sm hover:underline">View all appointments →</a>
                     </div>

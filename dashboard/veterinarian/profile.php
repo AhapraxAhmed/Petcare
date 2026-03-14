@@ -16,9 +16,9 @@ if (!isset($_SESSION['csrf_token'])) {
 $csrf_token = $_SESSION['csrf_token'];
 
 // Get veterinarian details
-$vet_query = "SELECT v.vet_id, v.specialization, v.clinic_name, v.clinic_address, v.experience_years, v.consultation_fee, v.available_hours, u.name, u.email, u.phone, u.profile_image, u.google_id 
+$vet_query = "SELECT v.vet_id, v.specialization, v.clinic_name, v.clinic_address, v.experience_years, v.consultation_fee, v.available_hours, u.name, u.email, u.phone, u.avatar 
               FROM veterinarians v 
-              JOIN users u ON v.user_id = u.user_id 
+              JOIN users u ON v.user_id = u.id 
               WHERE v.user_id = ?";
 $vet_stmt = $conn->prepare($vet_query);
 $vet_stmt->bind_param("i", $user_id);
@@ -26,8 +26,8 @@ $vet_stmt->execute();
 $vet = $vet_stmt->get_result()->fetch_assoc();
 $vet_stmt->close();
 
-// Parse available_hours JSON
-$available_hours = $vet['available_hours'] ? json_decode($vet['available_hours'], true) : [];
+// Parse available_hours JSON (check if column exists)
+$available_hours = isset($vet['available_hours']) && $vet['available_hours'] ? json_decode($vet['available_hours'], true) : [];
 
 // Get counts for overview
 $appointments_count_query = "SELECT COUNT(*) as appointment_count FROM appointments WHERE vet_id = ?";
@@ -61,32 +61,38 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
         $max_size = 5 * 1024 * 1024; // 5MB
         $file_type = $_FILES['profile_image']['type'];
         $file_size = $_FILES['profile_image']['size'];
-        
+
         if (in_array($file_type, $allowed_types) && $file_size <= $max_size) {
             $file_ext = pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
             $file_name = $user_id . '_' . time() . '.' . $file_ext;
             $upload_path = __DIR__ . '/../../Uploads/images/' . $file_name;
-            
+
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
-                $update_image_query = "UPDATE users SET profile_image = ? WHERE user_id = ?";
+                $update_image_query = "UPDATE users SET avatar = ? WHERE id = ?";
                 $update_image_stmt = $conn->prepare($update_image_query);
                 $image_path = $file_name;
                 $update_image_stmt->bind_param("si", $image_path, $user_id);
-                
+
                 if ($update_image_stmt->execute()) {
-                    $message = "Profile image updated successfully!";
-                    $vet['profile_image'] = $image_path;
-                } else {
+                    $update_image_stmt->close();
+                    $_SESSION['success_message'] = "Profile image updated successfully!";
+                    header("Location: profile.php");
+                    exit;
+                }
+                else {
                     $error = "Failed to update profile image in database.";
                 }
                 $update_image_stmt->close();
-            } else {
+            }
+            else {
                 $error = "Failed to upload image.";
             }
-        } else {
+        }
+        else {
             $error = "Invalid file type or size. Please upload a JPEG, PNG, or GIF image under 5MB.";
         }
-    } else {
+    }
+    else {
         $error = "No file uploaded or upload error occurred.";
     }
 }
@@ -98,31 +104,45 @@ if ($_POST && isset($_POST['update_profile']) && $_POST['csrf_token'] === $csrf_
     $specialization = trim($_POST['specialization']);
     $clinic_name = trim($_POST['clinic_name']);
     $clinic_address = trim($_POST['clinic_address']);
-    $available_hours = $_POST['available_hours'] ?? [];
+    // Process availability
+    $processed_hours = [];
+    $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    foreach ($days as $day) {
+        if (isset($_POST['is_open'][$day])) {
+            $start = $_POST['start_time'][$day] ?? '09:00';
+            $end = $_POST['end_time'][$day] ?? '17:00';
+            $processed_hours[$day] = $start . '-' . $end;
+        }
+        else {
+            $processed_hours[$day] = 'Closed';
+        }
+    }
+    $available_hours_json = json_encode($processed_hours);
 
     if (empty($name) || strlen($name) > 255) {
         $error = "Name is required and must be less than 255 characters.";
-    } elseif (!empty($phone) && !preg_match("/^\+?[1-9]\d{1,14}$/", $phone)) {
+    }
+    elseif (!empty($phone) && !preg_match("/^(\+92|0)3\d{9}$/", $phone)) {
         $error = "Invalid phone number format.";
-    } elseif (empty($specialization) || empty($clinic_name) || empty($clinic_address)) {
+    }
+    elseif (empty($specialization) || empty($clinic_name) || empty($clinic_address)) {
         $error = "Specialization, clinic name, and clinic address are required.";
-    } else {
+    }
+    else {
         $available_hours_json = json_encode($available_hours);
-        $stmt = $conn->prepare("UPDATE users SET name = ?, phone = ? WHERE user_id = ?");
+        $stmt = $conn->prepare("UPDATE users SET name = ?, phone = ? WHERE id = ?");
         $stmt->bind_param("ssi", $name, $phone, $user_id);
         $stmt2 = $conn->prepare("UPDATE veterinarians SET specialization = ?, clinic_name = ?, clinic_address = ?, available_hours = ? WHERE user_id = ?");
         $stmt2->bind_param("ssssi", $specialization, $clinic_name, $clinic_address, $available_hours_json, $user_id);
 
         if ($stmt->execute() && $stmt2->execute()) {
-            $message = "Profile updated successfully!";
-            $vet['name'] = $name;
-            $vet['phone'] = $phone;
-            $vet['specialization'] = $specialization;
-            $vet['clinic_name'] = $clinic_name;
-            $vet['clinic_address'] = $clinic_address;
-            $vet['available_hours'] = $available_hours_json;
-            $available_hours = json_decode($available_hours_json, true);
-        } else {
+            $stmt->close();
+            $stmt2->close();
+            $_SESSION['success_message'] = "Profile updated successfully!";
+            header("Location: profile.php");
+            exit;
+        }
+        else {
             $error = "Failed to update profile. Please try again.";
         }
         $stmt->close();
@@ -136,7 +156,7 @@ if ($_POST && isset($_POST['change_password']) && $_POST['csrf_token'] === $csrf
     $new_password = $_POST['new_password'];
     $confirm_password = $_POST['confirm_password'];
 
-    $pass_query = "SELECT password_hash FROM users WHERE user_id = ?";
+    $pass_query = "SELECT password FROM users WHERE id = ?";
     $pass_stmt = $conn->prepare($pass_query);
     $pass_stmt->bind_param("i", $user_id);
     $pass_stmt->execute();
@@ -144,27 +164,34 @@ if ($_POST && isset($_POST['change_password']) && $_POST['csrf_token'] === $csrf
     $user_data = $pass_result->fetch_assoc();
     $pass_stmt->close();
 
-    if (password_verify($current_password, $user_data['password_hash'])) {
+    if (password_verify($current_password, $user_data['password'])) {
         if ($new_password === $confirm_password) {
             if (strlen($new_password) >= 8) {
                 $new_hash = password_hash($new_password, PASSWORD_BCRYPT, ['cost' => 12]);
-                $update_pass_query = "UPDATE users SET password_hash = ? WHERE user_id = ?";
+                $update_pass_query = "UPDATE users SET password = ? WHERE id = ?";
                 $update_pass_stmt = $conn->prepare($update_pass_query);
                 $update_pass_stmt->bind_param("si", $new_hash, $user_id);
 
                 if ($update_pass_stmt->execute()) {
-                    $password_success = "Password changed successfully!";
-                } else {
+                    $update_pass_stmt->close();
+                    $_SESSION['success_message'] = "Password changed successfully!";
+                    header("Location: profile.php");
+                    exit;
+                }
+                else {
                     $password_error = "Failed to change password. Please try again.";
                 }
                 $update_pass_stmt->close();
-            } else {
+            }
+            else {
                 $password_error = "Password must be at least 8 characters long.";
             }
-        } else {
+        }
+        else {
             $password_error = "New passwords do not match.";
         }
-    } else {
+    }
+    else {
         $password_error = "Current password is incorrect.";
     }
 }
@@ -223,7 +250,7 @@ $conn->close();
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
@@ -242,7 +269,8 @@ $conn->close();
                                     <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                         <?php echo $unread_notifications; ?>
                                     </span>
-                                <?php endif; ?>
+                                <?php
+endif; ?>
                             </button>
                         </div>
                         <div class="text-sm text-gray-600">
@@ -263,31 +291,40 @@ $conn->close();
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                     <input type="hidden" name="upload_image" value="1">
                                     <label class="profile-image-container">
-                                        <img src="<?php echo (!empty($vet['profile_image']) && file_exists(__DIR__ . '/../../Uploads/images/' . $vet['profile_image'])) ? '../../Uploads/images/' . htmlspecialchars($vet['profile_image']) : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s'; ?>" alt="Veterinarian" class="w-24 h-24 rounded-full mx-auto mb-3">
+                                        <img src="<?php echo(!empty($vet['avatar']) && file_exists(__DIR__ . '/../../Uploads/images/' . $vet['avatar'])) ? '../../Uploads/images/' . htmlspecialchars($vet['avatar']) : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s'; ?>" alt="Veterinarian" class="w-24 h-24 rounded-full mx-auto mb-3">
                                         <input type="file" name="profile_image" accept="image/*" onchange="document.getElementById('imageUploadForm').submit();">
                                     </label>
                                 </form>
-                            <?php else: ?>
-                                <img src="<?php echo htmlspecialchars($vet['profile_image']); ?>" alt="Veterinarian" class="w-24 h-24 rounded-full mx-auto mb-3">
-                            <?php endif; ?>
+                            <?php
+else: ?>
+                                <img src="<?php echo htmlspecialchars($vet['avatar']); ?>" alt="Veterinarian" class="w-24 h-24 rounded-full mx-auto mb-3">
+                            <?php
+endif; ?>
                             <h5 class="font-medium"><?php echo htmlspecialchars($vet['name']); ?></h5>
                             <p class="text-gray-500"><?php echo htmlspecialchars($vet['email']); ?></p>
                             <span class="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Veterinarian</span>
                             <?php if ($vet['experience_years']): ?>
                                 <span class="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 mt-2"><?php echo $vet['experience_years']; ?> Years Experience</span>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
                         </div>
                         <div class="col-span-2">
-                            <?php if ($message): ?>
-                                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 animate-fade-in" role="alert">
-                                    <?php echo htmlspecialchars($message); ?>
+                            <?php if (isset($_SESSION['success_message'])): ?>
+                                <div id="successMessage" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 transition-opacity duration-500 opacity-100" role="alert">
+                                    <?php
+    echo htmlspecialchars($_SESSION['success_message']);
+    unset($_SESSION['success_message']); // remove after displaying
+?>
                                 </div>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
+
                             <?php if ($error): ?>
                                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 animate-fade-in" role="alert">
                                     <?php echo htmlspecialchars($error); ?>
                                 </div>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                                 <div class="bg-green-50 rounded-lg p-4 flex items-center justify-between">
                                     <div>
@@ -321,11 +358,23 @@ $conn->close();
                                 <div class="availability-form mt-2">
                                     <?php if ($available_hours): ?>
                                         <?php foreach ($available_hours as $day => $hours): ?>
-                                            <p><strong class="text-gray-700"><?php echo ucfirst($day); ?>:</strong> <?php echo htmlspecialchars($hours); ?></p>
-                                        <?php endforeach; ?>
-                                    <?php else: ?>
+                                            <?php
+        $display_hours = 'Closed';
+        if ($hours && strtolower($hours) !== 'closed' && strpos($hours, '-') !== false) {
+            list($start, $end) = explode('-', $hours);
+            $start_time = strtotime($start);
+            $end_time = strtotime($end);
+            $display_hours = date('g A', $start_time) . ' - ' . date('g A', $end_time);
+        }
+?>
+                                            <p><strong class="text-gray-700"><?php echo ucfirst($day); ?>:</strong> <?php echo $display_hours; ?></p>
+                                        <?php
+    endforeach; ?>
+                                    <?php
+else: ?>
                                         <p class="text-gray-500">No availability set</p>
-                                    <?php endif; ?>
+                                    <?php
+endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -340,49 +389,85 @@ $conn->close();
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                                <input type="text" name="name" id="name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50" 
+                                <input type="text" name="name" id="name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 p-1 focus:ring focus:ring-green-200 focus:ring-opacity-50" 
                                        value="<?php echo htmlspecialchars($vet['name']); ?>" required maxlength="255">
                                 <p class="text-sm text-red-500 hidden" id="name-error">Name is required and must be less than 255 characters.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                <input type="email" class="block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm" 
+                                <input type="email" class="block w-full rounded-lg border-gray-300 bg-gray-100 shadow-sm p-1" 
                                        value="<?php echo htmlspecialchars($vet['email']); ?>" disabled>
                                 <p class="text-sm text-gray-500 mt-1">Email cannot be changed</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                                <input type="tel" name="phone" id="phone" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50" 
-                                       value="<?php echo htmlspecialchars($vet['phone']); ?>" pattern="^\+?[1-9]\d{1,14}$">
-                                <p class="text-sm text-red-500 hidden" id="phone-error">Invalid phone number format.</p>
+                                <input type="tel" name="phone" id="phone" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-1" 
+                                       value="<?php echo htmlspecialchars($vet['phone']); ?>" 
+                                       placeholder="03xxxxxxxxx or +923xxxxxxxxx"
+                                       pattern="(\+92|0)3\d{9}" title="Please enter a valid Pakistani number (e.g., 03331234567 or +923331234567)">
+                                <p class="text-xs text-gray-500 mt-1">Format: 03xxxxxxxxx or +923xxxxxxxxx</p>
+                                <p class="text-sm text-red-500 hidden" id="phone-error">Please enter a valid Pakistani number.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Specialization</label>
-                                <input type="text" name="specialization" id="specialization" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50" 
+                                <input type="text" name="specialization" id="specialization" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-1" 
                                        value="<?php echo htmlspecialchars($vet['specialization']); ?>" required>
                                 <p class="text-sm text-red-500 hidden" id="specialization-error">Specialization is required.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Clinic Name</label>
-                                <input type="text" name="clinic_name" id="clinic_name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50" 
+                                <input type="text" name="clinic_name" id="clinic_name" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-1" 
                                        value="<?php echo htmlspecialchars($vet['clinic_name']); ?>" required>
                                 <p class="text-sm text-red-500 hidden" id="clinic_name-error">Clinic name is required.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Clinic Address</label>
-                                <textarea name="clinic_address" id="clinic_address" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50" rows="3"><?php echo htmlspecialchars($vet['clinic_address']); ?></textarea>
+                                <textarea name="clinic_address" id="clinic_address" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50 p-1" rows="3"><?php echo htmlspecialchars($vet['clinic_address']); ?></textarea>
                                 <p class="text-sm text-red-500 hidden" id="clinic_address-error">Clinic address is required.</p>
                             </div>
                             <div class="col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                                <div class="flex items-center justify-between mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">Working Hours</label>
+                                    <button type="button" onclick="copyMondayToAll()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded transition-colors">
+                                        <i class="fas fa-copy mr-1"></i> Copy Monday to all days
+                                    </button>
+                                </div>
                                 <?php $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']; ?>
-                                <?php foreach ($days as $day): ?>
-                                    <div class="mb-2">
-                                        <label class="block text-sm text-gray-600"><?php echo ucfirst($day); ?></label>
-                                        <input type="text" name="available_hours[<?php echo $day; ?>]" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50" 
-                                               value="<?php echo isset($available_hours[$day]) ? htmlspecialchars($available_hours[$day]) : ''; ?>" placeholder="e.g., 09:00-17:00">
-                                    </div>
-                                <?php endforeach; ?>
+                                <div class="space-y-3">
+                                    <?php foreach ($days as $day): ?>
+                                        <?php
+    $hour_str = isset($available_hours[$day]) ? $available_hours[$day] : '';
+    $isOpen = ($hour_str && strtolower($hour_str) !== 'closed');
+    $start = '';
+    $end = '';
+    if ($isOpen && strpos($hour_str, '-') !== false) {
+        list($start, $end) = explode('-', $hour_str);
+    }
+?>
+                                        <div class="flex flex-wrap items-center bg-gray-50 p-3 rounded-lg border border-gray-100" id="row_<?php echo $day; ?>">
+                                            <div class="w-32">
+                                                <span class="text-sm font-medium text-gray-700"><?php echo ucfirst($day); ?></span>
+                                            </div>
+                                            <div class="flex items-center space-x-4">
+                                                <label class="inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" name="is_open[<?php echo $day; ?>]" class="sr-only peer" <?php echo $isOpen ? 'checked' : ''; ?> onchange="toggleDay('<?php echo $day; ?>')">
+                                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                                    <span class="ms-3 text-sm font-medium text-gray-600 status-label"><?php echo $isOpen ? 'Open' : 'Closed'; ?></span>
+                                                </label>
+
+                                                <div class="time-inputs flex items-center space-x-2 <?php echo $isOpen ? '' : 'hidden opacity-50 pointer-events-none'; ?>">
+                                                    <input type="time" name="start_time[<?php echo $day; ?>]" value="<?php echo htmlspecialchars($start); ?>" 
+                                                           class="rounded border-gray-300 text-sm focus:ring-green-500 start-time">
+                                                    <span class="text-gray-400">-</span>
+                                                    <input type="time" name="end_time[<?php echo $day; ?>]" value="<?php echo htmlspecialchars($end); ?>" 
+                                                           class="rounded border-gray-300 text-sm focus:ring-green-500 end-time">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php
+endforeach; ?>
+                                </div>
+                                <input type="hidden" name="available_hours_submit" id="available_hours_json">
                             </div>
                         </div>
                         <div class="mt-6">
@@ -400,12 +485,14 @@ $conn->close();
                         <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 animate-fade-in" role="alert">
                             <?php echo htmlspecialchars($password_success); ?>
                         </div>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                     <?php if (isset($password_error)): ?>
                         <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 animate-fade-in" role="alert">
                             <?php echo htmlspecialchars($password_error); ?>
                         </div>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                     <form method="POST" action="" id="passwordForm">
                         <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -455,6 +542,19 @@ $conn->close();
                 form.classList.toggle('active');
             });
 
+            window.addEventListener('DOMContentLoaded', () => {
+                const msg = document.getElementById('successMessage');
+                if(msg){
+                    // fade out after 3 seconds
+                    setTimeout(() => {
+                        msg.style.opacity = '0';
+                        // remove from DOM after transition
+                        setTimeout(() => msg.remove(), 500);
+                    }, 3000);
+                }
+            });
+
+
             // Client-side form validation for profile
             const profileForm = document.getElementById('profileForm');
             profileForm.addEventListener('submit', function(e) {
@@ -475,7 +575,7 @@ $conn->close();
                     document.getElementById('name-error').classList.remove('hidden');
                     valid = false;
                 }
-                if (phone && !/^\+?[1-9]\d{1,14}$/.test(phone)) {
+                if (phone && !/^(\+92|0)3\d{9}$/.test(phone)) {
                     document.getElementById('phone-error').classList.remove('hidden');
                     valid = false;
                 }
@@ -523,6 +623,37 @@ $conn->close();
                 if (!valid) e.preventDefault();
             });
         });
+        function toggleDay(day) {
+            const row = document.getElementById('row_' + day);
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            const label = row.querySelector('.status-label');
+            const timeInputs = row.querySelector('.time-inputs');
+            
+            if (checkbox.checked) {
+                label.textContent = 'Open';
+                timeInputs.classList.remove('hidden', 'opacity-50', 'pointer-events-none');
+            } else {
+                label.textContent = 'Closed';
+                timeInputs.classList.add('hidden', 'opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function copyMondayToAll() {
+            const mondayOpen = document.querySelector('input[name="is_open[monday]"]').checked;
+            const mondayStart = document.querySelector('input[name="start_time[monday]"]').value;
+            const mondayEnd = document.querySelector('input[name="end_time[monday]"]').value;
+            
+            const days = ['tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            days.forEach(day => {
+                const checkbox = document.querySelector(`input[name="is_open[${day}]"]`);
+                checkbox.checked = mondayOpen;
+                
+                document.querySelector(`input[name="start_time[${day}]"]`).value = mondayStart;
+                document.querySelector(`input[name="end_time[${day}]"]`).value = mondayEnd;
+                
+                toggleDay(day);
+            });
+        }
     </script>
 </body>
 </html>

@@ -17,7 +17,7 @@ $stats_query = "SELECT
     SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_pets,
     SUM(CASE WHEN status = 'adopted' THEN 1 ELSE 0 END) as adopted_pets,
     (SELECT COUNT(*) FROM adoption_applications aa 
-     JOIN adoption_listings al ON aa.listing_id = al.id 
+     JOIN adoption_listings al ON aa.listing_id = al.listing_id 
      WHERE al.shelter_id = ?) as total_applications
     FROM adoption_listings WHERE shelter_id = ?";
 
@@ -42,8 +42,8 @@ $applications_query = "SELECT
     u.name AS applicant_name, 
     u.email AS applicant_email
 FROM adoption_applications aa
-JOIN adoption_listings al ON aa.listing_id = al.id
-JOIN pets p ON al.pet_id = p.id
+JOIN adoption_listings al ON aa.listing_id = al.listing_id
+JOIN pets p ON al.pet_id = p.pet_id
 JOIN users u ON aa.applicant_id = u.id
 WHERE al.shelter_id = ?
 ORDER BY aa.submitted_at DESC
@@ -96,7 +96,7 @@ $stmt->close();
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 p-8 overflow-y-auto">
@@ -190,18 +190,21 @@ $stmt->close();
                                         <p class="text-sm text-gray-600">Interested in <?php echo htmlspecialchars($app['pet_name']); ?></p>
                                     </div>
                                     <div class="text-right">
-                                        <span class="px-2 py-1 text-xs rounded-full <?php 
-                                            echo $app['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                                ($app['status'] === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'); 
-                                        ?>">
+                                        <span class="px-2 py-1 text-xs rounded-full <?php
+        echo $app['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            ($app['status'] === 'approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800');
+?>">
                                             <?php echo ucfirst($app['status']); ?>
                                         </span>
                                     </div>
                                 </div>
-                            <?php endwhile; ?>
-                        <?php else: ?>
+                            <?php
+    endwhile; ?>
+                        <?php
+else: ?>
                             <p class="text-gray-500 text-center py-4">No recent applications</p>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
                 </div>
             </div>

@@ -1,8 +1,13 @@
 <?php
-require_once '../config/config.php';
-require_once '../includes/functions.php';
+session_start();
 
-// Destroy session and redirect
+// remove all session variables
+session_unset();
+
+// destroy the session
 session_destroy();
-redirect('../index.php');
+
+// redirect to login page
+header("Location: ../index.php");
+exit();
 ?>

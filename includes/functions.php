@@ -83,8 +83,11 @@ function getCurrentUser() {
     $stmt->execute();
     $result = $stmt->get_result();
     
-    $user = $result->fetch_assoc();
-    return $user;
+    if ($user = $result->fetch_assoc()) {
+        $user['user_id'] = $user['id']; // Add alias for compatibility
+        return $user;
+    }
+    return null;
 }
 
 // Alias for compatibility if needed, but we should update calls

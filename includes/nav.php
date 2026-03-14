@@ -36,7 +36,7 @@ $logoutLink    = APP_URL . "/auth/logout.php";
             <!-- Center Logo -->
             <div class="flex items-center justify-center flex-1">
                 <div class="flex-shrink-0 flex items-center space-x-2">
-                    <img src="<?= APP_URL ?>/logo.png" alt="" class="w-50 h-60 mt-8">
+                    <img src="<?= APP_URL ?>/assets/images/logo.png" alt="" class="w-50 h-60 mt-8">
                 </div>
             </div>
 

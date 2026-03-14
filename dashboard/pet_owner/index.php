@@ -144,7 +144,7 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
 
         <!-- Main Content -->
@@ -165,7 +165,8 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                                 <?php echo $unread_notifications; ?>
                             </span>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
                         </button>
 
                         <!-- Dropdown -->
@@ -174,15 +175,16 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 <h4 class="font-medium text-gray-800 mb-3">Notifications</h4>
                                 <?php if (empty($recent_notifications)): ?>
                                     <p class="text-gray-500 text-sm text-center">No new notifications</p>
-                                <?php else: ?>
+                                <?php
+else: ?>
                                     <div class="space-y-3 max-h-64 overflow-y-auto">
                                         <?php foreach ($recent_notifications as $notification): ?>
                                         <div class="flex items-start <?php echo $notification['is_read'] ? 'opacity-60' : ''; ?>">
                                             <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                                <i class="fas <?php 
-                                                    echo $notification['type'] === 'appointment' ? 'fa-calendar' : 
-                                                        ($notification['type'] === 'vaccination' ? 'fa-syringe' : 'fa-bell'); 
-                                                ?> text-blue-600 text-sm"></i>
+                                                <i class="fas <?php
+        echo $notification['type'] === 'appointment' ? 'fa-calendar' :
+            ($notification['type'] === 'vaccination' ? 'fa-syringe' : 'fa-bell');
+?> text-blue-600 text-sm"></i>
                                             </div>
                                             <div class="flex-1">
                                                 <p class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($notification['title']); ?></p>
@@ -190,9 +192,11 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                                 <span class="text-xs text-gray-400"><?php echo format_date($notification['created_at'], 'M j, g:i A'); ?></span>
                                             </div>
                                         </div>
-                                        <?php endforeach; ?>
+                                        <?php
+    endforeach; ?>
                                     </div>
-                                <?php endif; ?>
+                                <?php
+endif; ?>
                             </div>
                             </div>
                         </div>
@@ -286,7 +290,8 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 <i class="fas fa-plus mr-2"></i>Add Your First Pet
                             </a>
                         </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <?php foreach ($recent_pets as $pet): ?>
                             <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
@@ -294,9 +299,11 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-3">
                                         <?php if ($pet['profile_image']): ?>
                                         <img src="../../uploads/pets/<?php echo htmlspecialchars($pet['profile_image']); ?>" alt="<?php echo htmlspecialchars($pet['name']); ?>" class="w-12 h-12 rounded-full object-cover">
-                                        <?php else: ?>
+                                        <?php
+        else: ?>
                                         <i class="fas fa-paw text-gray-500"></i>
-                                        <?php endif; ?>
+                                        <?php
+        endif; ?>
                                     </div>
                                     <div>
                                         <h4 class="font-medium text-gray-900"><?php echo htmlspecialchars($pet['name']); ?></h4>
@@ -308,15 +315,18 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <a href="pets.php?id=<?php echo $pet['pet_id']; ?>" class="text-blue-600 text-sm hover:underline">View Details</a>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </div>
                         
                         <?php if (count($recent_pets) >= 4): ?>
                         <div class="mt-4 text-center">
                             <a href="pets.php" class="text-blue-600 hover:underline">View all pets →</a>
                         </div>
-                        <?php endif; ?>
-                        <?php endif; ?>
+                        <?php
+    endif; ?>
+                        <?php
+endif; ?>
                     </div>
 
                     <!-- Upcoming Appointments -->
@@ -332,15 +342,16 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             <p class="text-gray-500 text-sm">No upcoming appointments</p>
                             <a href="appointments.php?action=book" class="text-blue-600 text-sm hover:underline mt-2 inline-block">Book an appointment</a>
                         </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                         <div class="space-y-4">
                             <?php foreach ($upcoming_appointments_details as $appointment): ?>
                             <div class="border-l-4 border-blue-500 pl-4 py-2">
                                 <div class="flex items-center justify-between mb-1">
                                     <h4 class="font-medium text-gray-900"><?php echo htmlspecialchars($appointment['pet_name']); ?></h4>
-                                    <span class="px-2 py-1 text-xs rounded-full <?php 
-                                        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'; 
-                                    ?>">
+                                    <span class="px-2 py-1 text-xs rounded-full <?php
+        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+?>">
                                         <?php echo ucfirst($appointment['status']); ?>
                                     </span>
                                 </div>
@@ -348,15 +359,18 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                 <p class="text-sm text-gray-500"><?php echo format_date($appointment['appointment_date'], 'M j, g:i A'); ?></p>
                                 <?php if ($appointment['reason']): ?>
                                 <p class="text-xs text-gray-500 mt-1"><?php echo htmlspecialchars($appointment['reason']); ?></p>
-                                <?php endif; ?>
+                                <?php
+        endif; ?>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </div>
                         
                         <div class="mt-4 text-center">
                             <a href="appointments.php" class="text-blue-600 text-sm hover:underline">View all appointments →</a>
                         </div>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
                 </div>
 
@@ -371,15 +385,16 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                             <i class="fas fa-bell-slash text-4xl text-gray-300 mb-3"></i>
                             <p class="text-gray-500 text-sm">No notifications yet</p>
                         </div>
-                        <?php else: ?>
+                        <?php
+else: ?>
                         <div class="space-y-4">
                             <?php foreach ($recent_notifications as $notification): ?>
                             <div class="flex items-start <?php echo $notification['is_read'] ? 'opacity-60' : ''; ?>">
                                 <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                    <i class="fas <?php 
-                                        echo $notification['type'] === 'appointment' ? 'fa-calendar' : 
-                                             ($notification['type'] === 'vaccination' ? 'fa-syringe' : 'fa-bell'); 
-                                    ?> text-blue-600 text-sm"></i>
+                                    <i class="fas <?php
+        echo $notification['type'] === 'appointment' ? 'fa-calendar' :
+            ($notification['type'] === 'vaccination' ? 'fa-syringe' : 'fa-bell');
+?> text-blue-600 text-sm"></i>
                                 </div>
                                 <div class="flex-1">
                                     <h4 class="text-sm font-medium text-gray-900"><?php echo htmlspecialchars($notification['title']); ?></h4>
@@ -387,9 +402,11 @@ $recent_notifications = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
                                     <span class="text-xs text-gray-500"><?php echo format_date($notification['created_at'], 'M j, g:i A'); ?></span>
                                 </div>
                             </div>
-                            <?php endforeach; ?>
+                            <?php
+    endforeach; ?>
                         </div>
-                        <?php endif; ?>
+                        <?php
+endif; ?>
                     </div>
 
                     <!-- Quick Actions -->

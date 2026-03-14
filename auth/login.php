@@ -200,7 +200,7 @@ $mail->sendWelcomeEmail($user['email'], $user['name'], $user['role'], false);
             <!-- Social Login -->
             <div class="space-y-3">
                 <!-- Google custom button -->
-                <a href="google-login.php"
+                <a href="google-login.php" id="googleLoginBtn"
                     class="w-full bg-white text-gray-700 py-3 px-4 rounded-lg font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center justify-center border">
                     <i class="fa-brands fa-google mr-3 text-xl text-red-500"></i>
                     Continue with Google

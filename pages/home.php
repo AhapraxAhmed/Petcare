@@ -180,11 +180,11 @@
                 </div>
                 <!-- Modified About Section div with modern corner-overlapping images -->
 <div class="fade-in-up relative" style="height: 500px; width: 600px;">
-    <img src="../home2.webp" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 50px; left: 50px; transform: rotate(5deg);">
-    <img src="../home5.jfif" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 50px; left: 300px; transform: rotate(5deg);">
-    <img src="../home3.jfif" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 250px; left: 100px; transform: rotate(3deg);">
-    <img src="../home4.jpg" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 200px; left: 350px; transform: rotate(-3deg);">
-    <img src="../home.jfif" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 150px; left: 200px; transform: rotate(0deg);">
+    <img src="../assets/images/home2.webp" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 50px; left: 50px; transform: rotate(5deg);">
+    <img src="../assets/images/home5.jfif" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 50px; left: 300px; transform: rotate(5deg);">
+    <img src="../assets/images/home3.jfif" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 250px; left: 100px; transform: rotate(3deg);">
+    <img src="../assets/images/home4.jpg" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 200px; left: 350px; transform: rotate(-3deg);">
+    <img src="../assets/images/home.jfif" alt="Veterinarian with pet and owner" class="rounded-lg shadow-xl absolute modern-image" style="width: 200px; height: 200px; top: 150px; left: 200px; transform: rotate(0deg);">
 </div>
 
 <script>

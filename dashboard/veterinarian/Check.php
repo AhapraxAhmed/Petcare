@@ -12,13 +12,39 @@ $user_id = $user['user_id'];
 $db = new Database();
 $conn = $db->getConnection();
 
-// Fetch veterinarian profile
-$vet_profile = $conn->query("
+// Fetch veterinarian profile using prepared statement
+$stmt = $conn->prepare("
     SELECT v.*, u.name, u.email, u.phone, u.address 
     FROM veterinarians v 
-    JOIN users u ON v.user_id = u.user_id 
-    WHERE v.user_id = $user_id
-")->fetch_assoc();
+    JOIN users u ON v.user_id = u.id 
+    WHERE v.user_id = ?
+");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$vet_profile = $stmt->get_result()->fetch_assoc();
+$stmt->close();
+
+// If profile doesn't exist, create an empty one for this vet
+if (!$vet_profile) {
+    $insert_stmt = $conn->prepare("INSERT INTO veterinarians (user_id) VALUES (?)");
+    $insert_stmt->bind_param("i", $user_id);
+    if ($insert_stmt->execute()) {
+        // Fetch it again
+        $stmt = $conn->prepare("
+            SELECT v.*, u.name, u.email, u.phone, u.address 
+            FROM veterinarians v 
+            JOIN users u ON v.user_id = u.id 
+            WHERE v.user_id = ?
+        ");
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $vet_profile = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+    } else {
+        error_log("Failed to create veterinarian profile for user_id: $user_id. Error: " . $insert_stmt->error);
+        die("Error: Could not initialize profile. Please contact support.");
+    }
+}
 
 // Check if profile query returned valid data
 if (!$vet_profile) {

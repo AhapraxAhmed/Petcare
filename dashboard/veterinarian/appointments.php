@@ -19,40 +19,40 @@ $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $appointment_id = $_POST['appointment_id'] ?? '';
-    
+
     switch ($action) {
         case 'confirm':
-            $stmt = $conn->prepare("UPDATE appointments SET status = 'confirmed' WHERE appointment_id = ? AND vet_id = ?");
+            $stmt = $conn->prepare("UPDATE appointments SET status = 'confirmed' WHERE id = ? AND vet_id = ?");
             $stmt->bind_param("ii", $appointment_id, $vet_id);
             if ($stmt->execute()) {
                 $message = "Appointment confirmed successfully!";
-                
+
                 // Get appointment details for notification
                 $apt_details = $conn->query("
-                    SELECT a.appointment_date, p.name as pet_name, u.user_id, u.name as owner_name, u.email
+                    SELECT a.appointment_date, p.name as pet_name, u.id as user_id, u.name as owner_name, u.email
                     FROM appointments a
                     JOIN pets p ON a.pet_id = p.pet_id
-                    JOIN users u ON a.owner_id = u.user_id
-                    WHERE a.appointment_id = $appointment_id
+                    JOIN users u ON a.owner_id = u.id
+                    WHERE a.id = $appointment_id
                 ")->fetch_assoc();
-                
+
                 if ($apt_details) {
-                    send_notification($apt_details['user_id'], 'Appointment Confirmed', 
+                    send_notification($apt_details['user_id'], 'Appointment Confirmed',
                         "Your appointment for {$apt_details['pet_name']} on " . format_date($apt_details['appointment_date'], 'M j, g:i A') . " has been confirmed.");
                 }
             }
             break;
-            
+
         case 'cancel':
-            $stmt = $conn->prepare("UPDATE appointments SET status = 'cancelled' WHERE appointment_id = ? AND vet_id = ?");
+            $stmt = $conn->prepare("UPDATE appointments SET status = 'cancelled' WHERE id = ? AND vet_id = ?");
             $stmt->bind_param("ii", $appointment_id, $vet_id);
             if ($stmt->execute()) {
                 $message = "Appointment cancelled successfully!";
             }
             break;
-            
+
         case 'complete':
-            $stmt = $conn->prepare("UPDATE appointments SET status = 'completed' WHERE appointment_id = ? AND vet_id = ?");
+            $stmt = $conn->prepare("UPDATE appointments SET status = 'completed' WHERE id = ? AND vet_id = ?");
             $stmt->bind_param("ii", $appointment_id, $vet_id);
             if ($stmt->execute()) {
                 $message = "Appointment marked as completed!";
@@ -69,32 +69,37 @@ $where_conditions = ["a.vet_id = $vet_id"];
 
 if ($filter === 'pending') {
     $where_conditions[] = "a.status = 'pending'";
-} elseif ($filter === 'confirmed') {
+}
+elseif ($filter === 'confirmed') {
     $where_conditions[] = "a.status = 'confirmed'";
-} elseif ($filter === 'today') {
+}
+elseif ($filter === 'today') {
     $where_conditions[] = "DATE(a.appointment_date) = CURDATE()";
-} elseif ($filter === 'upcoming') {
+}
+elseif ($filter === 'upcoming') {
     $where_conditions[] = "a.appointment_date >= NOW() AND a.status IN ('pending', 'confirmed')";
 }
 
 if ($date_filter === 'today') {
     $where_conditions[] = "DATE(a.appointment_date) = CURDATE()";
-} elseif ($date_filter === 'week') {
+}
+elseif ($date_filter === 'week') {
     $where_conditions[] = "WEEK(a.appointment_date) = WEEK(NOW()) AND YEAR(a.appointment_date) = YEAR(NOW())";
 }
 
 $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
 
 $appointments = $conn->query("
-    SELECT a.appointment_id, a.appointment_date, a.reason, a.status, a.notes,
+    SELECT a.id as appointment_id, a.appointment_date, a.status, a.notes,
            p.pet_id, p.name as pet_name, p.species, p.breed, p.age,
            u.name as owner_name, u.phone as owner_phone, u.email as owner_email
     FROM appointments a
     JOIN pets p ON a.pet_id = p.pet_id
-    JOIN users u ON a.owner_id = u.user_id
+    JOIN users u ON a.owner_id = u.id
     $where_clause
     ORDER BY a.appointment_date ASC
 ")->fetch_all(MYSQLI_ASSOC);
+
 
 $db->closeConnection();
 ?>
@@ -120,7 +125,7 @@ $db->closeConnection();
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
@@ -141,7 +146,8 @@ $db->closeConnection();
                     <i class="fas fa-check-circle mr-2"></i>
                     <?php echo $message; ?>
                 </div>
-                <?php endif; ?>
+                <?php
+endif; ?>
 
                 <!-- Filters -->
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -175,7 +181,8 @@ $db->closeConnection();
                         <h3 class="text-lg font-medium text-gray-600 mb-2">No appointments found</h3>
                         <p class="text-gray-500">No appointments match your current filter.</p>
                     </div>
-                    <?php else: ?>
+                    <?php
+else: ?>
                     <div class="divide-y divide-gray-200">
                         <?php foreach ($appointments as $appointment): ?>
                         <div class="p-6 hover:bg-gray-50 transition-colors">
@@ -190,10 +197,12 @@ $db->closeConnection();
                                             <?php echo htmlspecialchars($appointment['species']); ?>
                                             <?php if ($appointment['breed']): ?>
                                             • <?php echo htmlspecialchars($appointment['breed']); ?>
-                                            <?php endif; ?>
+                                            <?php
+        endif; ?>
                                             <?php if ($appointment['age']): ?>
                                             • <?php echo $appointment['age']; ?> years old
-                                            <?php endif; ?>
+                                            <?php
+        endif; ?>
                                         </p>
                                         <p class="text-sm text-gray-600">Owner: <?php echo htmlspecialchars($appointment['owner_name']); ?></p>
                                         <?php if ($appointment['owner_phone']): ?>
@@ -201,30 +210,32 @@ $db->closeConnection();
                                             <i class="fas fa-phone mr-1"></i>
                                             <?php echo htmlspecialchars($appointment['owner_phone']); ?>
                                         </p>
-                                        <?php endif; ?>
+                                        <?php
+        endif; ?>
                                     </div>
                                 </div>
                                 
                                 <div class="text-right">
                                     <p class="text-lg font-medium text-gray-900"><?php echo format_date($appointment['appointment_date'], 'M j, Y'); ?></p>
                                     <p class="text-sm text-gray-600"><?php echo format_date($appointment['appointment_date'], 'g:i A'); ?></p>
-                                    <span class="inline-block mt-2 px-3 py-1 text-sm rounded-full <?php 
-                                        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                                             ($appointment['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                                              ($appointment['status'] === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800')); 
-                                    ?>">
+                                    <span class="inline-block mt-2 px-3 py-1 text-sm rounded-full <?php
+        echo $appointment['status'] === 'confirmed' ? 'bg-green-100 text-green-800' :
+            ($appointment['status'] === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+            ($appointment['status'] === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'));
+?>">
                                         <?php echo ucfirst($appointment['status']); ?>
                                     </span>
                                 </div>
                             </div>
                             
-                            <?php if ($appointment['reason']): ?>
+                            <?php if ($appointment['notes']): ?>
                             <div class="mt-4 ml-16">
                                 <p class="text-sm text-gray-700">
-                                    <strong>Reason:</strong> <?php echo htmlspecialchars($appointment['reason']); ?>
+                                    <strong>Reason:</strong> <?php echo htmlspecialchars($appointment['notes']); ?>
                                 </p>
                             </div>
-                            <?php endif; ?>
+                            <?php
+        endif; ?>
                             
                             <?php if ($appointment['notes']): ?>
                             <div class="mt-2 ml-16">
@@ -232,7 +243,8 @@ $db->closeConnection();
                                     <strong>Notes:</strong> <?php echo htmlspecialchars($appointment['notes']); ?>
                                 </p>
                             </div>
-                            <?php endif; ?>
+                            <?php
+        endif; ?>
                             
                             <div class="mt-4 ml-16 flex items-center space-x-3">
                                 <?php if ($appointment['status'] === 'pending'): ?>
@@ -252,7 +264,8 @@ $db->closeConnection();
                                     </button>
                                 </form>
                                 
-                                <?php elseif ($appointment['status'] === 'confirmed'): ?>
+                                <?php
+        elseif ($appointment['status'] === 'confirmed'): ?>
                                 <form method="POST" class="inline">
                                     <input type="hidden" name="action" value="complete">
                                     <input type="hidden" name="appointment_id" value="<?php echo $appointment['appointment_id']; ?>">
@@ -264,16 +277,19 @@ $db->closeConnection();
                                 <a href="treatments.php?appointment_id=<?php echo $appointment['appointment_id']; ?>" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm">
                                     <i class="fas fa-notes-medical mr-1"></i>Add Treatment
                                 </a>
-                                <?php endif; ?>
+                                <?php
+        endif; ?>
                                 
                                 <a href="patients.php?id=<?php echo $appointment['pet_id']; ?>" class="text-green-600 hover:text-green-800 text-sm">
                                     View Patient Record
                                 </a>
                             </div>
                         </div>
-                        <?php endforeach; ?>
+                        <?php
+    endforeach; ?>
                     </div>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                 </div>
             </main>
         </div>

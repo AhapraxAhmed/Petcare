@@ -2,8 +2,10 @@
 require_once '../../middleware/auth.php';
 requireRole('admin');
 
-$user = a(); 
-$user_id = $user['id']; 
+$user = a();
+
+$user_id = $user['id'];
+
 
 $db = new Database();
 $conn = $db->getConnection();
@@ -28,7 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($name) || empty($admin_email)) {
         $message = "Name and Admin Email are required!";
         $message_type = "error";
-    } else {
+    }
+    else {
         // Create upload directory if it doesn't exist
         $upload_dir = '../../uploads/users/';
         if (!is_dir($upload_dir)) {
@@ -50,11 +53,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         unlink($upload_dir . $avatar);
                     }
                     $avatar = $file_name;
-                } else {
+                }
+                else {
                     $message = "Failed to upload profile image!";
                     $message_type = "error";
                 }
-            } else {
+            }
+            else {
                 $message = "Invalid file type! Only JPEG, PNG, and GIF are allowed.";
                 $message_type = "error";
             }
@@ -73,7 +78,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $current_user['address'] = $address;
                 $current_user['email'] = $admin_email;
                 $current_user['avatar'] = $avatar;
-            } else {
+            }
+            else {
                 $message = "Failed to update profile!";
                 $message_type = "error";
             }
@@ -127,7 +133,7 @@ $db->closeConnection();
 
             <!-- Outer Shell with Rounded Glass -->
             <div class="flex h-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden animate-scale-in">
-               <?php include "sidebar.php";?>
+               <?php include "sidebar.php"; ?>
 
         <!-- Main Content -->
         <div class="flex-1 overflow-y-auto">
@@ -150,7 +156,8 @@ $db->closeConnection();
                     <h3 class="text-lg font-semibold text-gray-800 mb-6">System and Profile Settings</h3>
                     <?php if ($message): ?>
                         <div class="<?php echo $message_type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'; ?> p-4 rounded-lg mb-6"><?php echo htmlspecialchars($message); ?></div>
-                    <?php endif; ?>
+                    <?php
+endif; ?>
                     <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <!-- System Settings -->
                         <div>
@@ -159,7 +166,7 @@ $db->closeConnection();
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Admin Email</label>
-                            <input type="email" name="admin_email" value="<?php echo htmlspecialchars($current_user['email'] ?? 'admin@furshield.com'); ?>" class="mt-1 p-2 w-full border rounded-md">
+                            <input type="email" name="admin_email" value="<?php echo htmlspecialchars($current_user['email'] ?? 'admin@furshield.com'); ?>" class="mt-1 p-2 w-full border rounded-md" readonly>
                         </div>
                         <!-- Profile Settings -->
                         <div>
@@ -179,7 +186,8 @@ $db->closeConnection();
                             <input type="file" name="profile_image" accept="image/jpeg,image/png,image/gif" class="mt-1 p-2 w-full border rounded-md">
                             <?php if ($current_user['avatar']): ?>
                                 <p class="text-sm text-gray-500 mt-1">Current: <a href="../../uploads/users/<?php echo htmlspecialchars($current_user['avatar']); ?>" target="_blank">View Image</a></p>
-                            <?php endif; ?>
+                            <?php
+endif; ?>
                         </div>
                         <div class="md:col-span-2">
                             <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600">Save Settings</button>
