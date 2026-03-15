@@ -28,7 +28,7 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
         if (in_array($file_type, $allowed_types) && $file_size <= $max_size) {
             $file_ext = pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
             $file_name = $user_id . '_' . time() . '.' . $file_ext;
-            $upload_path = __DIR__ . '/../../uploads/images/' . $file_name;
+            $upload_path = __DIR__ . '/../../uploads/users/' . $file_name;
             
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
                 // Update database with new profile image
@@ -40,6 +40,7 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
                 if ($update_image_stmt->execute()) {
                     $image_success = "Profile image updated successfully!";
                     $user_info['avatar'] = $image_path; // Update local user data
+                    $_SESSION['user_avatar'] = $image_path; // Sync session for sidebar
                 } else {
                     $image_error = "Failed to update profile image in database.";
                 }
@@ -230,17 +231,33 @@ $unread_notifications = $notifications_result->fetch_assoc()['count'];
                 <div class="bg-white rounded-xl shadow-sm p-6 mb-6 pet-card animate-fade-in">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="text-center">
+                            <?php 
+                            $avatar_url = '/furshield/assets/images/you.jpg';
+                            if (!empty($user_info['avatar'])) {
+                                if (strpos($user_info['avatar'], 'http') === 0) {
+                                    $avatar_url = htmlspecialchars($user_info['avatar']);
+                                } else {
+                                    $local_path = __DIR__ . '/../../uploads/users/' . $user_info['avatar'];
+                                    if (file_exists($local_path)) {
+                                        $avatar_url = '../../uploads/users/' . htmlspecialchars($user_info['avatar']);
+                                    }
+                                }
+                            }
+                            ?>
                             <?php if (!isset($user_info['google_id']) && !isset($user_info['github_id'])): ?>
                                 <form method="POST" action="" enctype="multipart/form-data" id="imageUploadForm">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                     <input type="hidden" name="upload_image" value="1">
-                                    <label class="profile-image-container">
-                                        <img src="<?php echo (!empty($user_info['avatar']) && file_exists(__DIR__ . '/../../uploads/images/' . $user_info['avatar'])) ? '../../uploads/images/' . htmlspecialchars($user_info['avatar']) : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s'; ?>" alt="User" class="w-10 h-10 rounded-full mx-auto mb-3">
+                                    <label class="profile-image-container group">
+                                        <img src="<?php echo $avatar_url; ?>" alt="User" class="w-32 h-32 rounded-full mx-auto mb-3 object-cover border-4 border-white shadow-lg transition-transform hover:scale-105">
+                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="bg-black/50 text-white text-xs px-2 py-1 rounded-full">Change Photo</span>
+                                        </div>
                                         <input type="file" name="profile_image" accept="image/*" onchange="document.getElementById('imageUploadForm').submit();">
                                     </label>
                                 </form>
                             <?php else: ?>
-                                <img src="<?php echo htmlspecialchars($user_info['avatar']); ?>" alt="User" class="w-10 h-10 rounded-full mx-auto mb-3">
+                                <img src="<?php echo $avatar_url; ?>" alt="User" class="w-32 h-32 rounded-full mx-auto mb-3 object-cover border-4 border-white shadow-lg">
                             <?php endif; ?>
                             <h5 class="font-medium"><?php echo htmlspecialchars($user_info['name']); ?></h5>
                             <p class="text-gray-500"><?php echo htmlspecialchars($user_info['email']); ?></p>

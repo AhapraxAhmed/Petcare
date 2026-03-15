@@ -24,7 +24,7 @@ $user_pets = $pets_result->fetch_all(MYSQLI_ASSOC);
 $pets_stmt->close();
 
 // Get available veterinarians
-$vets_query = "SELECT v.vet_id, u.name, v.specialization, v.clinic_name, v.consultation_fee 
+$vets_query = "SELECT v.vet_id, u.name, v.specialization, v.clinic_name, v.consultation_fee, v.available_hours 
                FROM veterinarians v 
                JOIN users u ON v.user_id = u.id 
                WHERE u.is_verified = 1";
@@ -50,7 +50,7 @@ if ($_POST && isset($_POST['book_appointment'])) {
 
     if ($insert_stmt->execute()) {
         $insert_stmt->close();
-        
+
         // Get vet's user_id for notification
         $v_stmt = $conn->prepare("SELECT user_id FROM veterinarians WHERE vet_id = ?");
         $v_stmt->bind_param("i", $vet_id);
@@ -80,7 +80,8 @@ if (isset($_GET['cancel_id'])) {
     $stmt->bind_param("ii", $cancel_id, $user_id);
     if ($stmt->execute()) {
         $_SESSION['success_message'] = "Appointment cancelled successfully.";
-    } else {
+    }
+    else {
         $_SESSION['error_message'] = "Failed to cancel appointment.";
     }
     $stmt->close();
@@ -95,7 +96,8 @@ if (isset($_GET['delete_id'])) {
     $stmt->bind_param("ii", $delete_id, $user_id);
     if ($stmt->execute()) {
         $_SESSION['success_message'] = "Appointment deleted successfully.";
-    } else {
+    }
+    else {
         $_SESSION['error_message'] = "Failed to delete appointment.";
     }
     $stmt->close();
@@ -121,7 +123,8 @@ if ($_POST && isset($_POST['edit_appointment'])) {
     if ($update_stmt->execute()) {
         $update_stmt->close();
         $_SESSION['success_message'] = "Appointment updated successfully!";
-    } else {
+    }
+    else {
         $update_stmt->close();
         $_SESSION['error_message'] = "Failed to update appointment.";
     }
@@ -224,74 +227,139 @@ endif; ?>
                 </div>
             </header>
 
-            <!-- Main Content -->
+            <!-- Dashboard Content -->
             <main class="flex-1 overflow-y-auto p-6">
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-gray-800 px-2">
+                            <i class="fas fa-stethoscope mr-2 text-blue-500"></i>Find & Book a Specialist
+                        </h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <?php foreach ($veterinarians as $v): ?>
+                            <?php $hours = json_decode($v['available_hours'], true); ?>
+                            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all group">
+                                <div class="p-5 flex flex-col h-full">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+                                                <?= strtoupper(substr($v['name'], 0, 1)) ?>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-gray-900 leading-tight">Dr. <?= htmlspecialchars($v['name']) ?></h4>
+                                                <p class="text-xs text-blue-600 font-medium"><?= htmlspecialchars($v['specialization']) ?></p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <span class="text-lg font-bold text-gray-900">$<?= number_format($v['consultation_fee'], 0) ?></span>
+                                            <p class="text-[10px] text-gray-400 uppercase tracking-wider">Fee</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex-1 space-y-1.5 mb-5">
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Weekly Schedule</p>
+                                        <?php 
+                                        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                                        foreach ($days as $day): 
+                                            $h = $hours[$day] ?? 'Closed';
+                                            $isOpen = ($h && strtolower($h) !== 'closed');
+                                        ?>
+                                            <div class="flex justify-between text-[11px]">
+                                                <span class="text-gray-500 capitalize"><?= substr($day, 0, 3) ?></span>
+                                                <span class="<?= $isOpen ? 'text-gray-700 font-medium' : 'text-gray-300' ?>">
+                                                    <?= $isOpen ? str_replace('-', ' - ', $h) : 'Closed' ?>
+                                                </span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <button onclick="openBookingModal(<?= htmlspecialchars(json_encode($v)) ?>)" 
+                                            class="w-full py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
+                                        Book Consultation
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div id="bookingForm"></div>
                 <?php if (isset($_SESSION['success_message'])): ?>
                     <div id="successMessage" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 transition-opacity duration-500 opacity-100" role="alert">
-                        <p><?php echo htmlspecialchars($_SESSION['success_message']); unset($_SESSION['success_message']); ?></p>
+                        <p><?php echo htmlspecialchars($_SESSION['success_message']);
+    unset($_SESSION['success_message']); ?></p>
                     </div>
                 <?php
 endif; ?>
                 <?php if (isset($_SESSION['error_message'])): ?>
                     <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 animate-fade-in" role="alert">
-                        <p><?php echo htmlspecialchars($_SESSION['error_message']); unset($_SESSION['error_message']); ?></p>
+                        <p><?php echo htmlspecialchars($_SESSION['error_message']);
+    unset($_SESSION['error_message']); ?></p>
                     </div>
                 <?php
 endif; ?>
                 
-                <!-- Book New Appointment -->
-                <div class="bg-white rounded-xl shadow-sm p-6 mb-6 pet-card animate-fade-in">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-plus mr-2"></i>Book New Appointment</h3>
-                    </div>
-                    <form method="POST" action="appointments.php">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Select Pet</label>
-                                <select name="pet_id" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required>
-                                    <option value="">Choose your pet...</option>
-                                    <?php foreach ($user_pets as $pet): ?>
-                                        <option value="<?php echo $pet['pet_id']; ?>">
-                                            <?php echo htmlspecialchars($pet['name']); ?>
-                                        </option>
-                                    <?php
-endforeach; ?>
-                                </select>
+                <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+                    <div class="bg-white rounded-[2rem] max-w-lg w-full p-8 shadow-2xl overflow-hidden animate-scale-in border border-white/20">
+                        <div class="flex items-center justify-between mb-8">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-calendar-plus text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-800">New Appointment</h3>
+                                    <p class="text-xs text-gray-500" id="booking_vet_name_display">Booking for Dr. Smith</p>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Select Veterinarian</label>
-                                <select name="vet_id" id="book_vet_id" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required onchange="updateVetAvailability('book')">
-                                    <option value="">Choose veterinarian...</option>
-                                    <?php foreach ($veterinarians as $vet): ?>
-                                        <option value="<?php echo $vet['vet_id']; ?>">
-                                            Dr. <?php echo htmlspecialchars($vet['name']); ?>
-                                        </option>
-                                    <?php
-endforeach; ?>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Appointment Date</label>
-                                <input type="date" name="appointment_date" id="book_appointment_date" min="<?php echo date('Y-m-d'); ?>" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required onchange="updateVetAvailability('book')">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Available Time Slots</label>
-                                <select name="appointment_time" id="book_appointment_time" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" required disabled>
-                                    <option value="">Select date and vet first...</option>
-                                </select>
-                                <p id="book_availability_info" class="text-xs text-gray-500 mt-1"></p>
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Reason for Visit</label>
-                                <textarea name="reason" class="block w-full rounded-lg p-1 border border-gray-800 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50" rows="3" placeholder="Describe the reason for this appointment..."></textarea>
-                            </div>
-                        </div>
-                        <div class="mt-6">
-                            <button type="submit" name="book_appointment" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
-                                <i class="fas fa-calendar-plus mr-2"></i> Book Appointment
+                            <button onclick="closeBookingModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-all">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
-                    </form>
+                        
+                        <form method="POST" action="appointments.php" class="space-y-5">
+                            <input type="hidden" name="vet_id" id="book_vet_id">
+                            
+                            <div class="space-y-4 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">My Pet</label>
+                                    <select name="pet_id" class="block w-full rounded-xl border-gray-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" required>
+                                        <option value="">Which pet needs care?</option>
+                                        <?php foreach ($user_pets as $pet): ?>
+                                            <option value="<?php echo $pet['pet_id']; ?>">
+                                                🐾 <?php echo htmlspecialchars($pet['name']); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Appointment Date</label>
+                                        <select name="appointment_date" id="book_appointment_date" class="block w-full rounded-xl border-gray-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" required onchange="updateTimeSlots('book')">
+                                            <option value="">Loading...</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Available Time</label>
+                                        <select name="appointment_time" id="book_appointment_time" class="block w-full rounded-xl border-gray-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" required disabled>
+                                            <option value="">Select date...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="book_availability_info" class="text-[10px] font-medium text-center"></div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Reason for Visit</label>
+                                <textarea name="reason" class="block w-full rounded-2xl border-gray-200 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all" rows="3" placeholder="Describe the symptoms or reason..."></textarea>
+                            </div>
+
+                            <button type="submit" name="book_appointment" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center space-x-2">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Confirm Booking</span>
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 
                 <!-- Appointments List -->
@@ -359,7 +427,8 @@ else: ?>
                                                         <a href="?cancel_id=<?php echo $appointment['id']; ?>" onclick="return confirm('Discard this appointment?')" class="text-orange-600 hover:text-orange-900" title="Discard">
                                                             <i class="fas fa-times-circle"></i>
                                                         </a>
-                                                    <?php endif; ?>
+                                                    <?php
+        endif; ?>
                                                     <a href="?delete_id=<?php echo $appointment['id']; ?>" onclick="return confirm('Permanently delete this record?')" class="text-red-600 hover:text-red-900" title="Delete">
                                                         <i class="fas fa-trash"></i>
                                                     </a>
@@ -399,7 +468,8 @@ endif; ?>
                         <select name="pet_id" id="edit_pet_id" class="block w-full rounded-lg p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" required>
                             <?php foreach ($user_pets as $pet): ?>
                                 <option value="<?php echo $pet['pet_id']; ?>"><?php echo htmlspecialchars($pet['name']); ?></option>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </select>
                     </div>
                     <div>
@@ -407,16 +477,19 @@ endif; ?>
                         <select name="vet_id" id="edit_vet_id" class="block w-full rounded-lg p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" required onchange="updateVetAvailability('edit')">
                             <?php foreach ($veterinarians as $vet): ?>
                                 <option value="<?php echo $vet['vet_id']; ?>">Dr. <?php echo htmlspecialchars($vet['name']); ?></option>
-                            <?php endforeach; ?>
+                            <?php
+endforeach; ?>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Appointment Date</label>
-                        <input type="date" name="appointment_date" id="edit_appointment_date" min="<?php echo date('Y-m-d'); ?>" class="block w-full rounded-lg p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" required onchange="updateVetAvailability('edit')">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Available Dates</label>
+                        <select name="appointment_date" id="edit_appointment_date" class="block w-full rounded-lg p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" required onchange="updateTimeSlots('edit')">
+                            <option value="">Select veterinarian first...</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Available Time Slots</label>
-                        <select name="appointment_time" id="edit_appointment_time" class="block w-full rounded-lg p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" required>
+                        <select name="appointment_time" id="edit_appointment_time" class="block w-full rounded-lg p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200" required disabled>
                             <option value="">Select date first...</option>
                         </select>
                     </div>
@@ -434,37 +507,51 @@ endif; ?>
     </div>
 
     <script>
-        function openEditModal(appointment) {
+        function openBookingModal(vet) {
+            document.getElementById('book_vet_id').value = vet.vet_id;
+            document.getElementById('booking_vet_name_display').textContent = 'Booking for Dr. ' + vet.name;
+            document.getElementById('bookingModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            updateVetAvailability('book');
+        }
+
+        function closeBookingModal() {
+            document.getElementById('bookingModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        const globalAvailability = {};
+
+        async function openEditModal(appointment) {
             const modal = document.getElementById('editModal');
             document.getElementById('edit_appointment_id').value = appointment.id;
             document.getElementById('edit_pet_id').value = appointment.pet_id;
             document.getElementById('edit_vet_id').value = appointment.vet_id;
             document.getElementById('edit_reason').value = appointment.notes;
             
-            // Format date for the input
             const dateStr = appointment.appointment_date.split(' ')[0];
             const timeStr = appointment.appointment_date.split(' ')[1].substring(0, 5);
-            document.getElementById('edit_appointment_date').value = dateStr;
             
             modal.classList.remove('hidden');
             
-            // Fetch availability and select the current time
-            updateVetAvailability('edit', timeStr);
+            // Populate dates and then select the right one
+            await updateVetAvailability('edit');
+            document.getElementById('edit_appointment_date').value = dateStr;
+            updateTimeSlots('edit', timeStr);
         }
 
         function closeEditModal() {
             document.getElementById('editModal').classList.add('hidden');
         }
 
-        async function updateVetAvailability(type, selectTime = null) {
+        async function updateVetAvailability(type) {
             const vetId = document.getElementById(type + '_vet_id').value;
-            const dateVal = document.getElementById(type + '_appointment_date').value;
+            const dateSelect = document.getElementById(type + '_appointment_date');
             const timeSelect = document.getElementById(type + '_appointment_time');
-            const infoText = document.getElementById(type + '_availability_info');
 
-            if (!vetId || !dateVal) {
-                timeSelect.innerHTML = '<option value="">Select date and vet first...</option>';
-                timeSelect.disabled = true;
+            if (!vetId) {
+                dateSelect.innerHTML = '<option value="">Select veterinarian first...</option>';
+                dateSelect.disabled = true;
                 return;
             }
 
@@ -473,35 +560,73 @@ endif; ?>
                 const data = await response.json();
 
                 if (data.success) {
-                    const dayName = new Date(dateVal).toLocaleDateString('en-US', { weekday: 'lowercase' });
-                    const range = data.available_hours[dayName];
-
-                    if (!range || range.toLowerCase() === 'closed' || range.trim() === '') {
-                        timeSelect.innerHTML = '<option value="">Doctor unavailable on this day</option>';
-                        timeSelect.disabled = true;
-                        if (infoText) infoText.textContent = '❌ Closed on ' + dayName.charAt(0).toUpperCase() + dayName.slice(1);
-                        return;
-                    }
-
-                    if (infoText) infoText.textContent = '✅ Available: ' + range;
-
-                    // Generate slots
-                    const [startStr, endStr] = range.split('-');
-                    const slots = generateTimeSlots(startStr.trim(), endStr.trim());
+                    globalAvailability[type] = data.available_hours;
                     
-                    timeSelect.innerHTML = '';
-                    slots.forEach(slot => {
-                        const opt = document.createElement('option');
-                        opt.value = slot;
-                        opt.textContent = slot;
-                        if (selectTime && slot === selectTime) opt.selected = true;
-                        timeSelect.appendChild(opt);
-                    });
-                    timeSelect.disabled = false;
+                    // Generate next 14 days
+                    dateSelect.innerHTML = '<option value="">Choose a date...</option>';
+                    const today = new Date();
+                    let count = 0;
+                    for(let i=0; i<30 && count < 14; i++) { // Check up to 30 days to find 14 working days
+                        const d = new Date(today);
+                        d.setDate(today.getDate() + i);
+                        const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+                        const dayName = dayNames[d.getDay()];
+                        const range = data.available_hours[dayName];
+                        
+                        if (range && range.toLowerCase() !== 'closed' && range.trim() !== '' && range.includes('-')) {
+                            const opt = document.createElement('option');
+                            const val = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                            opt.value = val;
+                            opt.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+                            dateSelect.appendChild(opt);
+                            count++;
+                        }
+                    }
+                    dateSelect.disabled = false;
+                    timeSelect.innerHTML = '<option value="">Select date first...</option>';
+                    timeSelect.disabled = true;
                 }
             } catch (err) {
                 console.error('Failed to fetch availability:', err);
             }
+        }
+
+        function updateTimeSlots(type, selectTime = null) {
+            const dateVal = document.getElementById(type + '_appointment_date').value;
+            const timeSelect = document.getElementById(type + '_appointment_time');
+            const infoText = document.getElementById(type + '_availability_info');
+
+            if (!dateVal || !globalAvailability[type]) return;
+
+            // Reliable day calculation from YYYY-MM-DD
+            const [year, month, day] = dateVal.split('-').map(Number);
+            const d = new Date(year, month - 1, day);
+            const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+            const dayName = dayNames[d.getDay()];
+            const range = globalAvailability[type][dayName];
+
+            if (!range || range.toLowerCase() === 'closed' || !range.includes('-')) {
+                timeSelect.innerHTML = '<option value="">Doctor unavailable</option>';
+                timeSelect.disabled = true;
+                if (infoText) infoText.textContent = '❌ Closed';
+                return;
+            }
+
+            if (infoText) infoText.textContent = '✅ Available: ' + range;
+
+            // Generate slots
+            const [startStr, endStr] = range.split('-');
+            const slots = generateTimeSlots(startStr.trim(), endStr.trim());
+            
+            timeSelect.innerHTML = '';
+            slots.forEach(slot => {
+                const opt = document.createElement('option');
+                opt.value = slot;
+                opt.textContent = slot;
+                if (selectTime && slot === selectTime) opt.selected = true;
+                timeSelect.appendChild(opt);
+            });
+            timeSelect.disabled = false;
         }
 
         function generateTimeSlots(start, end) {

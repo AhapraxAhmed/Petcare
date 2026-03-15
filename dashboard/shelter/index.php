@@ -4,8 +4,9 @@ require_once '../../middleware/auth.php';
 // Authenticate user
 requireRole('shelter');
 
-$user_id = $_SESSION['user_id'];
-$name = $_SESSION['name'] ?? 'Shelter User';
+$user = getCurrentUser();
+$user_id = $user['id'];
+$name = $user['name'] ?? 'Shelter User';
 
 // Initialize database
 $db = Database::getInstance();

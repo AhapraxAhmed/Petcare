@@ -65,7 +65,7 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
         if (in_array($file_type, $allowed_types) && $file_size <= $max_size) {
             $file_ext = pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
             $file_name = $user_id . '_' . time() . '.' . $file_ext;
-            $upload_path = __DIR__ . '/../../Uploads/images/' . $file_name;
+            $upload_path = __DIR__ . '/../../uploads/users/' . $file_name;
 
             if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $upload_path)) {
                 $update_image_query = "UPDATE users SET avatar = ? WHERE id = ?";
@@ -75,6 +75,8 @@ if ($_POST && isset($_POST['upload_image']) && $_POST['csrf_token'] === $csrf_to
 
                 if ($update_image_stmt->execute()) {
                     $update_image_stmt->close();
+                    $user['avatar'] = $image_path; // Update local user
+                    $_SESSION['user_data']['avatar'] = $image_path; // Sync session
                     $_SESSION['success_message'] = "Profile image updated successfully!";
                     header("Location: profile.php");
                     exit;
@@ -129,7 +131,6 @@ if ($_POST && isset($_POST['update_profile']) && $_POST['csrf_token'] === $csrf_
         $error = "Specialization, clinic name, and clinic address are required.";
     }
     else {
-        $available_hours_json = json_encode($available_hours);
         $stmt = $conn->prepare("UPDATE users SET name = ?, phone = ? WHERE id = ?");
         $stmt->bind_param("ssi", $name, $phone, $user_id);
         $stmt2 = $conn->prepare("UPDATE veterinarians SET specialization = ?, clinic_name = ?, clinic_address = ?, available_hours = ? WHERE user_id = ?");
@@ -204,42 +205,51 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Veterinarian Profile - FurShield</title>
+    <title>Vet Profile - FurShield</title>
+    <link rel="icon" href="../../assets/images/favicon.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; }
         .gradient-bg {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         }
         .vet-card {
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .vet-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
         }
         .animate-fade-in {
-            animation: fadeIn 0.6s ease-in;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s ease-out;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .animate-fade-in.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .availability-form {
+            max-height: 0;
+            overflow: hidden;
+            transition: all 0.5s ease;
+        }
+        .availability-form.active {
+            max-height: 1000px;
+            margin-top: 1rem;
         }
         .profile-image-container {
             position: relative;
             cursor: pointer;
+            overflow: hidden;
         }
         .profile-image-container input[type="file"] {
             display: none;
         }
-        .availability-toggle {
-            cursor: pointer;
-        }
-        .availability-form {
-            display: none;
-        }
-        .availability-form.active {
-            display: block;
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
         }
     </style>
     <link rel="icon" href="/furshield/assets/images/favicon.png" type="image/x-icon">
@@ -256,25 +266,25 @@ $conn->close();
         <div class="flex-1 overflow-y-auto">
             <!-- Header -->
             <header class="bg-white shadow-sm border-b border-gray-200">
-                <div class="flex items-center justify-between px-6 py-4">
+                <div class="flex items-center justify-between px-8 py-5">
                     <div>
-                        <h2 class="text-2xl font-bold text-gray-800">Veterinarian Profile</h2>
-                        <p class="text-gray-600">Manage your professional details</p>
+                        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Professional Profile</h2>
+                        <p class="text-slate-500 text-sm font-medium">Manage your clinic details and schedule</p>
                     </div>
-                    <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <button class="text-gray-500 hover:text-gray-700 relative">
-                                <i class="fas fa-bell text-xl"></i>
+                    <div class="flex items-center space-x-5">
+                        <div class="relative group">
+                            <button class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all">
+                                <i class="fas fa-bell"></i>
                                 <?php if ($unread_notifications > 0): ?>
-                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-lg px-1.5 py-0.5 border-2 border-white">
                                         <?php echo $unread_notifications; ?>
                                     </span>
-                                <?php
-endif; ?>
+                                <?php endif; ?>
                             </button>
                         </div>
-                        <div class="text-sm text-gray-600">
-                            <?php echo date('l, F j, Y, g:i A'); ?>
+                        <div class="hidden sm:block text-right">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Today</p>
+                            <p class="text-sm font-bold text-slate-700"><?php echo date('l, F j'); ?></p>
                         </div>
                     </div>
                 </div>
@@ -286,20 +296,31 @@ endif; ?>
                 <div class="bg-white rounded-xl shadow-sm p-6 mb-6 vet-card animate-fade-in">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="text-center">
+                            <?php 
+                            $avatar_url = APP_URL . '/assets/images/you.jpg';
+                            if (!empty($vet['avatar'])) {
+                                if (strpos($vet['avatar'], 'http') === 0) {
+                                    $avatar_url = htmlspecialchars($vet['avatar']);
+                                } else {
+                                    $avatar_url = APP_URL . '/uploads/users/' . htmlspecialchars($vet['avatar']);
+                                }
+                            }
+                            ?>
                             <?php if (empty($user['google_id']) && empty($user['githubid'])): ?>
                                 <form method="POST" action="" enctype="multipart/form-data" id="imageUploadForm">
                                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                                     <input type="hidden" name="upload_image" value="1">
-                                    <label class="profile-image-container">
-                                        <img src="<?php echo(!empty($vet['avatar']) && file_exists(__DIR__ . '/../../Uploads/images/' . $vet['avatar'])) ? '../../Uploads/images/' . htmlspecialchars($vet['avatar']) : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s'; ?>" alt="Veterinarian" class="w-24 h-24 rounded-full mx-auto mb-3">
+                                    <label class="profile-image-container group">
+                                        <img src="<?php echo $avatar_url; ?>" alt="Veterinarian" class="w-32 h-32 rounded-full mx-auto mb-3 object-cover border-4 border-white shadow-lg transition-transform hover:scale-105">
+                                        <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <span class="bg-black/50 text-white text-xs px-2 py-1 rounded-full">Change Photo</span>
+                                        </div>
                                         <input type="file" name="profile_image" accept="image/*" onchange="document.getElementById('imageUploadForm').submit();">
                                     </label>
                                 </form>
-                            <?php
-else: ?>
-                                <img src="<?php echo htmlspecialchars($vet['avatar']); ?>" alt="Veterinarian" class="w-24 h-24 rounded-full mx-auto mb-3">
-                            <?php
-endif; ?>
+                            <?php else: ?>
+                                <img src="<?php echo $avatar_url; ?>" alt="Veterinarian" class="w-32 h-32 rounded-full mx-auto mb-3 object-cover border-4 border-white shadow-lg">
+                            <?php endif; ?>
                             <h5 class="font-medium"><?php echo htmlspecialchars($vet['name']); ?></h5>
                             <p class="text-gray-500"><?php echo htmlspecialchars($vet['email']); ?></p>
                             <span class="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Veterinarian</span>
@@ -325,36 +346,86 @@ endif; ?>
                                 </div>
                             <?php
 endif; ?>
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                                <div class="bg-green-50 rounded-lg p-4 flex items-center justify-between">
+                            <div class="grid grid-cols-2 gap-4 mt-8">
+                                <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex items-center justify-between group-hover:bg-indigo-100 transition-all">
                                     <div>
-                                        <h4 class="text-2xl font-bold text-green-600"><?php echo $pets_treated; ?></h4>
-                                        <p class="text-gray-600">Pets Treated</p>
+                                        <h4 class="text-3xl font-extrabold text-indigo-700"><?php echo $pets_treated; ?></h4>
+                                        <p class="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Patients</p>
                                     </div>
-                                    <i class="fas fa-paw text-2xl text-green-600"></i>
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-paw text-indigo-500"></i>
+                                    </div>
                                 </div>
-                                <div class="bg-blue-50 rounded-lg p-4 flex items-center justify-between">
+                                <div class="bg-purple-50 border border-purple-100 rounded-2xl p-5 flex items-center justify-between group-hover:bg-purple-100 transition-all">
                                     <div>
-                                        <h4 class="text-2xl font-bold text-blue-600"><?php echo $appointments_count; ?></h4>
-                                        <p class="text-gray-600">Total Appointments</p>
+                                        <h4 class="text-3xl font-extrabold text-purple-700"><?php echo $appointments_count; ?></h4>
+                                        <p class="text-[10px] font-bold text-purple-400 uppercase tracking-widest">Visits</p>
                                     </div>
-                                    <i class="fas fa-calendar-check text-2xl text-blue-600"></i>
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-calendar-check text-purple-500"></i>
+                                    </div>
                                 </div>
-                                <div class="bg-yellow-50 rounded-lg p-4 flex items-center justify-between">
+                                <div class="col-span-2 bg-slate-50 border border-slate-100 rounded-2xl p-5 flex items-center justify-between group-hover:bg-slate-100 transition-all">
                                     <div>
-                                        <h4 class="text-2xl font-bold text-yellow-600">$<?php echo number_format($vet['consultation_fee'], 2); ?></h4>
-                                        <p class="text-gray-600">Consultation Fee</p>
+                                        <h4 class="text-2xl font-extrabold text-slate-700"><?php echo format_currency($vet['consultation_fee']); ?></h4>
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base Rate</p>
                                     </div>
-                                    <i class="fas fa-dollar-sign text-2xl text-yellow-600"></i>
+                                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <i class="fas fa-tag text-slate-500"></i>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="bg-white border rounded-lg p-4">
-                                <h6 class="font-medium text-gray-700 mb-3">Professional Information</h6>
-                                <p><strong class="text-gray-700">Clinic:</strong> <?php echo htmlspecialchars($vet['clinic_name']); ?></p>
-                                <p><strong class="text-gray-700">Specialization:</strong> <?php echo htmlspecialchars($vet['specialization']); ?></p>
-                                <p><strong class="text-gray-700">Experience:</strong> <?php echo $vet['experience_years'] ? $vet['experience_years'] . ' years' : 'Not specified'; ?></p>
-                                <p><strong class="text-gray-700">Consultation Fee:</strong> $<?php echo number_format($vet['consultation_fee'], 2); ?></p>
-                                <p class="availability-toggle text-green-600 hover:text-green-700 cursor-pointer"><i class="fas fa-clock mr-1"></i>View Availability</p>
+                        </div>
+                        <div class="col-span-2">
+                             <div class="bg-white border-2 border-slate-50 rounded-[2rem] p-8 h-full relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[4rem] -mr-16 -mt-16 -z-10 group-hover:bg-blue-50 transition-all"></div>
+                                <h6 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Clinic Overview</h6>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-hospital text-blue-500 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Practice</p>
+                                            <p class="text-sm font-bold text-slate-700"><?php echo htmlspecialchars($vet['clinic_name']); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-award text-orange-500 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Expertise</p>
+                                            <p class="text-sm font-bold text-slate-700"><?php echo htmlspecialchars($vet['specialization']); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-history text-emerald-500 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Practice Since</p>
+                                            <p class="text-sm font-bold text-slate-700"><?php echo $vet['experience_years'] ? $vet['experience_years'] . ' years' : 'Establishing'; ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-4">
+                                        <div class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-map-marker-alt text-rose-500 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Location</p>
+                                            <p class="text-xs font-bold text-slate-700 leading-relaxed"><?php echo htmlspecialchars($vet['clinic_address']); ?></p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">
+                                    <button class="availability-toggle flex items-center space-x-2 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:text-blue-700 transition-colors">
+                                        <i class="fas fa-clock"></i>
+                                        <span>Show Public Schedule</span>
+                                    </button>
+                                </div>
                                 <div class="availability-form mt-2">
                                     <?php if ($available_hours): ?>
                                         <?php foreach ($available_hours as $day => $hours): ?>
@@ -426,46 +497,54 @@ endif; ?>
                                 <p class="text-sm text-red-500 hidden" id="clinic_address-error">Clinic address is required.</p>
                             </div>
                             <div class="col-span-2">
-                                <div class="flex items-center justify-between mb-4">
-                                    <label class="block text-sm font-medium text-gray-700">Working Hours</label>
-                                    <button type="button" onclick="copyMondayToAll()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-1 rounded transition-colors">
-                                        <i class="fas fa-copy mr-1"></i> Copy Monday to all days
-                                    </button>
+                                <div class="flex items-center justify-between mb-4 mt-8">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas fa-clock text-blue-500"></i>
+                                        <label class="block text-sm font-bold text-gray-700 uppercase tracking-wider">Consultation Hours</label>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button type="button" onclick="copyMondayToAll()" class="text-[10px] font-bold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-all border border-blue-100">
+                                            <i class="fas fa-copy mr-1"></i> Copy Monday
+                                        </button>
+                                        <button type="button" onclick="clearAllDays()" class="text-[10px] font-bold bg-red-50 text-red-600 px-3 py-1.5 rounded-full hover:bg-red-100 transition-all border border-red-100">
+                                            <i class="fas fa-trash-alt mr-1"></i> Clear All
+                                        </button>
+                                    </div>
                                 </div>
                                 <?php $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']; ?>
-                                <div class="space-y-3">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <?php foreach ($days as $day): ?>
                                         <?php
-    $hour_str = isset($available_hours[$day]) ? $available_hours[$day] : '';
-    $isOpen = ($hour_str && strtolower($hour_str) !== 'closed');
-    $start = '';
-    $end = '';
-    if ($isOpen && strpos($hour_str, '-') !== false) {
-        list($start, $end) = explode('-', $hour_str);
-    }
-?>
-                                        <div class="flex flex-wrap items-center bg-gray-50 p-3 rounded-lg border border-gray-100" id="row_<?php echo $day; ?>">
-                                            <div class="w-32">
-                                                <span class="text-sm font-medium text-gray-700"><?php echo ucfirst($day); ?></span>
-                                            </div>
-                                            <div class="flex items-center space-x-4">
-                                                <label class="inline-flex items-center cursor-pointer">
+                                        $hour_str = isset($available_hours[$day]) ? $available_hours[$day] : '';
+                                        $isOpen = ($hour_str && strtolower($hour_str) !== 'closed');
+                                        $start = '';
+                                        $end = '';
+                                        if ($isOpen && strpos($hour_str, '-') !== false) {
+                                            list($start, $end) = explode('-', $hour_str);
+                                        }
+                                        ?>
+                                        <div class="flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-all hover:border-blue-200" id="row_<?php echo $day; ?>">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider"><?php echo ucfirst($day); ?></span>
+                                                <label class="relative inline-flex items-center cursor-pointer">
                                                     <input type="checkbox" name="is_open[<?php echo $day; ?>]" class="sr-only peer" <?php echo $isOpen ? 'checked' : ''; ?> onchange="toggleDay('<?php echo $day; ?>')">
-                                                    <div class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                                                    <span class="ms-3 text-sm font-medium text-gray-600 status-label"><?php echo $isOpen ? 'Open' : 'Closed'; ?></span>
+                                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                                    <span class="ms-2 text-[10px] font-bold text-slate-500 uppercase status-label"><?php echo $isOpen ? 'Open' : 'Closed'; ?></span>
                                                 </label>
-
-                                                <div class="time-inputs flex items-center space-x-2 <?php echo $isOpen ? '' : 'hidden opacity-50 pointer-events-none'; ?>">
+                                            </div>
+                                            <div class="time-inputs flex items-center space-x-2 <?php echo $isOpen ? '' : 'hidden opacity-50 pointer-events-none'; ?>">
+                                                <div class="flex-1 relative">
                                                     <input type="time" name="start_time[<?php echo $day; ?>]" value="<?php echo htmlspecialchars($start); ?>" 
-                                                           class="rounded border-gray-300 text-sm focus:ring-green-500 start-time">
-                                                    <span class="text-gray-400">-</span>
+                                                           class="w-full rounded-xl border-slate-200 text-xs py-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 start-time">
+                                                </div>
+                                                <span class="text-slate-300">to</span>
+                                                <div class="flex-1 relative">
                                                     <input type="time" name="end_time[<?php echo $day; ?>]" value="<?php echo htmlspecialchars($end); ?>" 
-                                                           class="rounded border-gray-300 text-sm focus:ring-green-500 end-time">
+                                                           class="w-full rounded-xl border-slate-200 text-xs py-2 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 end-time">
                                                 </div>
                                             </div>
                                         </div>
-                                    <?php
-endforeach; ?>
+                                    <?php endforeach; ?>
                                 </div>
                                 <input type="hidden" name="available_hours_submit" id="available_hours_json">
                             </div>
@@ -651,6 +730,17 @@ endif; ?>
                 document.querySelector(`input[name="start_time[${day}]"]`).value = mondayStart;
                 document.querySelector(`input[name="end_time[${day}]"]`).value = mondayEnd;
                 
+                toggleDay(day);
+            });
+        }
+
+        function clearAllDays() {
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            days.forEach(day => {
+                const checkbox = document.querySelector(`input[name="is_open[${day}]"]`);
+                checkbox.checked = false;
+                document.querySelector(`input[name="start_time[${day}]"]`).value = "";
+                document.querySelector(`input[name="end_time[${day}]"]`).value = "";
                 toggleDay(day);
             });
         }

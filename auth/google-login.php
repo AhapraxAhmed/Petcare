@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = $payload['email'];
         $name = $payload['name'];
         $google_id = $payload['sub'];
+        $avatar = $payload['picture'] ?? null; // Capture Google profile picture
 
         $db = Database::getInstance();
         $conn = $db->getConnection();
@@ -32,7 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $stmt->get_result();
 
         if ($user = $result->fetch_assoc()) {
-            // User exists, log them in
+            // User exists, update avatar if changed and log them in
+            if ($avatar) {
+                $update_avatar = $conn->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+                $update_avatar->bind_param("si", $avatar, $user['id']);
+                $update_avatar->execute();
+            }
+
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_role'] = $user['role'];
@@ -40,19 +47,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             echo json_encode(['success' => true, 'role' => $user['role']]);
         } else {
-            // User doesn't exist, we might need to register them
-            // For simplicity, let's assume we use the role saved in session from register.php
+            // User doesn't exist, we need to register them
+            // Pull role from session (saved in save-role-session.php via register.php)
             $role = $_SESSION['oauth_role'] ?? 'owner';
             
-            $stmt = $conn->prepare("INSERT INTO users (name, email, role, password, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
+            // Password handling: For social login, we use a random dummy password.
+            // Big websites often leave this unusable unless a 'reset' is performed.
             $dummy_password = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
-            $stmt->bind_param("ssss", $name, $email, $role, $dummy_password);
+            
+            $stmt = $conn->prepare("INSERT INTO users (name, email, role, password, avatar, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+            $stmt->bind_param("sssss", $name, $email, $role, $dummy_password, $avatar);
             
             if ($stmt->execute()) {
                 $user_id = $conn->insert_id;
                 
                 // Initialize role-specific tables
                 if ($role === 'vet') {
+                    // Check if veterinarians table exists and initialize
                     $stmt_vet = $conn->prepare("INSERT INTO veterinarians (user_id) VALUES (?)");
                     $stmt_vet->bind_param("i", $user_id);
                     $stmt_vet->execute();
@@ -68,9 +79,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_role'] = $role;
                 $_SESSION['user_name'] = $name;
 
+                // Clear OAuth session data
+                unset($_SESSION['oauth_role']);
+                unset($_SESSION['oauth_shelter_name']);
+
                 echo json_encode(['success' => true, 'role' => $role]);
             } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to create user']);
+                echo json_encode(['success' => false, 'message' => 'Failed to create user account.']);
             }
         }
     } else {

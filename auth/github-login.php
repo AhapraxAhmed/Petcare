@@ -60,6 +60,7 @@ if (isset($response['access_token'])) {
     }
 
     $name = $user_info['name'] ?? $user_info['login'];
+    $avatar = $user_info['avatar_url'] ?? null;
 
     $db = Database::getInstance();
     $conn = $db->getConnection();
@@ -71,6 +72,13 @@ if (isset($response['access_token'])) {
     $result = $stmt->get_result();
 
     if ($user = $result->fetch_assoc()) {
+        // User exists, update avatar and log in
+        if ($avatar) {
+            $update_avatar = $conn->prepare("UPDATE users SET avatar = ? WHERE id = ?");
+            $update_avatar->bind_param("si", $avatar, $user['id']);
+            $update_avatar->execute();
+        }
+
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_email'] = $user['email'];
         $_SESSION['user_role'] = $user['role'];
@@ -82,8 +90,8 @@ if (isset($response['access_token'])) {
         $role = $_SESSION['oauth_role'] ?? 'owner';
         $dummy_password = password_hash(bin2hex(random_bytes(16)), PASSWORD_DEFAULT);
 
-        $stmt = $conn->prepare("INSERT INTO users (name, email, role, password, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)");
-        $stmt->bind_param("ssss", $name, $email, $role, $dummy_password);
+        $stmt = $conn->prepare("INSERT INTO users (name, email, role, password, avatar, created_at) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)");
+        $stmt->bind_param("sssss", $name, $email, $role, $dummy_password, $avatar);
         
         if ($stmt->execute()) {
             $user_id = $conn->insert_id;
@@ -104,6 +112,10 @@ if (isset($response['access_token'])) {
             $_SESSION['user_email'] = $email;
             $_SESSION['user_role'] = $role;
             $_SESSION['user_name'] = $name;
+
+            // Clear OAuth session data
+            unset($_SESSION['oauth_role']);
+            unset($_SESSION['oauth_shelter_name']);
 
             redirect(get_dashboard_url($role));
         } else {

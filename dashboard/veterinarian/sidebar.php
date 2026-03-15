@@ -30,17 +30,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <div class="absolute bottom-0 w-16 mb-2">
     <!-- Profile Button -->
     <button id="userMenuBtn" class="flex items-center p-2">
-        <img src="<?php
-if (empty($user['avatar'])) {
-    echo 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR4g_2Qj3LsNR-iqUAFm6ut2EQVcaou4u2YXw&s';
-}
-else {
-    echo(isset($user['google_id']) || isset($user['github_id']))
-        ? htmlspecialchars($user['avatar'])
-        : '../../Uploads/images/' . htmlspecialchars($user['avatar']);
-}
-?>" 
-        alt="User" class="w-10 h-10 rounded-full">
+        <?php
+        $avatar_url = APP_URL . '/assets/images/you.jpg';
+        if (!empty($user['avatar'])) {
+            if (strpos($user['avatar'], 'http') === 0) {
+                $avatar_url = htmlspecialchars($user['avatar']);
+            } else {
+                $avatar_url = APP_URL . '/uploads/users/' . htmlspecialchars($user['avatar']);
+            }
+        }
+        ?>
+        <img src="<?= $avatar_url ?>" alt="User" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm">
     </button>
 
     <!-- Collapsible Menu -->

@@ -50,14 +50,22 @@ $logoutLink    = APP_URL . "/auth/logout.php";
     <div x-data="{ open: false }" class="relative">
         <!-- Toggle Button -->
         <button @click="open = !open"
-                class="flex items-center space-x-2 px-4 py-2 rounded-full 
+                class="flex items-center space-x-2 px-2 py-1.5 rounded-full 
                        bg-white/20 backdrop-blur-md border border-gray/80 
                        text-gray-900 font-medium shadow-md
-                       hover:bg-white/20 hover:text-blue-500  transition">
-            <i class="fas fa-user-circle text-xl"></i>
-            <span><?= htmlspecialchars($username) ?> {<?= htmlspecialchars($role) ?>}</span>
+                       hover:bg-white/20 hover:text-blue-500 transition">
+            <?php 
+            $avatar_url = '/furshield/assets/images/you.jpg';
+            if (isset($user['avatar']) && !empty($user['avatar'])) {
+                $avatar_url = (strpos($user['avatar'], 'http') === 0) 
+                    ? htmlspecialchars($user['avatar']) 
+                    : '/furshield/uploads/users/' . htmlspecialchars($user['avatar']);
+            }
+            ?>
+            <img src="<?= $avatar_url ?>" alt="Avatar" class="w-8 h-8 rounded-full border border-gray-300 object-cover">
+            <span><?= htmlspecialchars($username) ?></span>
             <!-- Arrow toggle -->
-            <span x-text="open ? '▲' : '▼'" class="text-sm"></span>
+            <span x-text="open ? '▲' : '▼'" class="text-xs ml-1"></span>
         </button>
 
         <!-- Dropdown Menu -->
